@@ -7,7 +7,6 @@ from googlesearch import search
 import translators as ts
 import json
 
-from langchain.agents import load_tools, AgentType, Tool, initialize_agent
 import yfinance as yf
 
 import warnings
@@ -15,6 +14,14 @@ import os
 warnings.filterwarnings("ignore")
 
 llm_api = ""
+
+def translate_text(text,lang1,lang2):
+    try:
+        text = ts.translate_text(text, from_language=lang1,to_language=lang2)
+        return text
+    except Exception as e:
+        print(f"\n>>> Translation failed: {e}\n")
+        return text #return unchanged answer if translation failed
 
 # Fetch stock data from Yahoo Finance
 def get_stock_price(ticker,history=5):
@@ -32,8 +39,8 @@ def get_stock_price(ticker,history=5):
     
     return df.to_string()
 
-def get_search_results(search_term):
-    query = search_term + "stock news"
+def get_search_results(company_name):
+    query = f"recent news about {company_name}"
     search_results = search(query, num=3, stop=3, pause=2)
     top_links = list(search_results)
     return top_links
@@ -55,9 +62,9 @@ def get_recent_stock_news(company_name):
         text = scrape_webpage(link)
         if text:
             news.append(text)
-    news_string=""
-    for i,n in enumerate(news):
-        news_string+=f"{i}. {n}\n"
+    
+    news_string = '\n'.join(news)
+
     top3_news="Recent News:\n\n"+news_string
     
     print(top3_news)
@@ -80,17 +87,9 @@ def get_financial_statements(ticker):
     balance_sheet = balance_sheet.to_string()
     return balance_sheet
 
-def translate_text(text,lang):
-    try:
-        text = ts.translate_text(text, to_language=lang)
-        return text
-    except Exception as e:
-        print(f"Translation failed: {e}")
-        return text #return unchanged answer if translation failed
-
 def get_company_name(query):
     
-    query = translate_text(query,"en")
+    query = translate_text(query,"ru","en")
     
     pplx_key = llm_api
     url = "https://api.perplexity.ai/chat/completions"
@@ -100,7 +99,7 @@ def get_company_name(query):
         "messages": [
             {
                 "role": "system",
-                "content": f"Given the user request, what is the comapany name in English? Answer only with the company name in English and nothing else: {query}?"
+                "content": f"Given the user request, what is the company name in English? Answer only with the company name in English and nothing else: {query}?"
             },
             {
                 "role": "user",
@@ -123,7 +122,9 @@ def get_company_name(query):
     # Access and print the "content"
     company_name = parsed_json["choices"][0]["message"]["content"]
     
-    company_name = translate_text(company_name,"en")
+    #company_name = translate_text(company_name,"ru","en")
+    
+    print(company_name)
     
     return company_name
 
@@ -151,13 +152,17 @@ def Anazlyze_stock(query):
     #available_information=f"Stock Financials: {stock_financials}\n\nStock News: {stock_news}"
 
     # print("\n\nAnalyzing.....\n")
+    
+    system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
+            Give detailed stock analysis and use the available data and provide investment recommendation. \
+             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer"
+    
     prompt = f"Give detailed stock analysis and use the available data and provide investment recommendation. \
-             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
-             User question: {query} \
-             You have the following information available about {company_name}. Write 5-8 bulle tpoints about investment analysis to answer user query, At the end conclude with proper explaination and a certain decision (buy or don't buy) about this company's stock.  : \
-              {available_information}. \
-             A good rule of thumb that you should use is 'buy rumors and sell news', use that rule when analyzing the stock."
-    # print(analysis)
+            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
+            User question: {query} \
+            You have the following information available about {company_name}. Write 5-8 bulle tpoints about investment analysis to answer user query, At the end conclude with proper explaination and a certain decision (buy or don't buy) about this company's stock.  : \
+            {available_information}. \
+            A good rule of thumb that you should use is 'buy rumors and sell news', use that rule when analyzing the stock."
     
     pplx_key = llm_api
     url = "https://api.perplexity.ai/chat/completions"
@@ -167,11 +172,11 @@ def Anazlyze_stock(query):
         "messages": [
             {
                 "role": "system",
-                "content": prompt
+                "content": system_prompt
             },
             {
                 "role": "user",
-                "content": query
+                "content": prompt
             }
         ]
     }
@@ -189,5 +194,9 @@ def Anazlyze_stock(query):
 
     # Access and print the "content"
     answer_analysis = parsed_json["choices"][0]["message"]["content"]
+    
+    answer_analysis = translate_text(answer_analysis,"en","ru")
+    
+    print(answer_analysis)
 
     return answer_analysis
