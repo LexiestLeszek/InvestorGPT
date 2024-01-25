@@ -2,10 +2,10 @@ import streamlit as st
 import tools
 from stock_research import Anazlyze_stock
 
-st.title("Робот для анализа Акций")
-st.write("Этот бот собирает в реальном времени информацию, связанную с акциями, и анализирует ее с помощью языковой модели")
+st.title("Stock Analysis bot")
+st.write("This bot scraps and gathers real time stock realted information and analyzes it using LLM")
 
-query = st.text_input('Напишите свой вопрос по поводу конкретной компании:')
+query = st.text_input('Input your investment related query:') 
 
 Enter=st.button("Enter")
 clear=st.button("Clear")
@@ -16,11 +16,9 @@ if clear:
 
 if Enter:
     import time
-    with st.spinner('Собираю информацию на основе финотчетсности, цены за последний год и последних новостей ...'):
+    with st.spinner('Gathering all required information and analyzing. Be patient!!!!!'):
         out=Anazlyze_stock(query)
-    st.success('Готово!')
+    st.success('Done!')
     st.write(out)
 
-# to run:
-# $: streamlit run app.py
-
+# to run: streamlit run app.py

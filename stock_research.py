@@ -15,14 +15,6 @@ warnings.filterwarnings("ignore")
 
 llm_api = ""
 
-def translate_text(text,lang1,lang2):
-    try:
-        text = ts.translate_text(text, from_language=lang1,to_language=lang2)
-        return text
-    except Exception as e:
-        print(f"\n>>> Translation failed: {e}\n")
-        return text #return unchanged answer if translation failed
-
 # Fetch stock data from Yahoo Finance
 def get_stock_price(ticker,history=5):
     #time.sleep(4) #To avoid rate limit error
@@ -40,7 +32,7 @@ def get_stock_price(ticker,history=5):
     return df.to_string()
 
 def get_search_results(company_name):
-    query = f"recent news about {company_name}"
+    query = f"{company_name} news"
     search_results = search(query, num=3, stop=3, pause=2)
     top_links = list(search_results)
     return top_links
@@ -88,8 +80,6 @@ def get_financial_statements(ticker):
     return balance_sheet
 
 def get_company_name(query):
-    
-    query = translate_text(query,"ru","en")
     
     pplx_key = llm_api
     url = "https://api.perplexity.ai/chat/completions"
@@ -194,8 +184,6 @@ def Anazlyze_stock(query):
 
     # Access and print the "content"
     answer_analysis = parsed_json["choices"][0]["message"]["content"]
-    
-    answer_analysis = translate_text(answer_analysis,"en","ru")
     
     print(answer_analysis)
 
