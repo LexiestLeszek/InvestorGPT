@@ -16,7 +16,7 @@ These factors provide a comprehensive view of the company's historical performan
 The response and action agent were initially used for stock analysis, but the results were inconsistent. This approach involves a dynamic thought process during runtime, with actions based on the agent's thoughts. However, it may get stuck in an infinite loop of thoughts and actions, making it unsuitable for complex tasks such as stock analysis. Further improvements can be made by modifying the prompt.
 
 
-### Example
+#### Example
 
 Input
 
@@ -42,7 +42,3 @@ Investment Thesis for Apple Inc.:
 Conclusion:
 Based on the available data, investing in Apple Inc. right now could be a favorable option. The company has strong financials and a positive stock price trend. Additionally, Apple's high revenues and positive news coverage suggest that the company is performing well and has a strong market presence. However, it is important to conduct further research and analysis to assess the potential risks associated with the technology sector and the company's competitive position.
 `
-
-#### Warning - not an investment advice!
-
-This bot is made for educational purposes and is not providing any investment advice. Use it to your own discretion, owner and creator of the bot doesn't hold any responsibility for the results of this bot.

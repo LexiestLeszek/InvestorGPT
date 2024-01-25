@@ -89,7 +89,7 @@ def get_company_name(query):
         "messages": [
             {
                 "role": "system",
-                "content": f"Given the user request, what is the company name in English? Answer only with the company name in English and nothing else: {query}?"
+                "content": f"Given the user request, what is the company name in English? Answer only with the company name in English and nothing else, not even a period or comma: {query}?"
             },
             {
                 "role": "user",
@@ -132,7 +132,7 @@ def get_stock_ticker(company_name):
 def Anazlyze_stock(query):
     #agent.run(query) Outputs Company name, Ticker
     company_name = get_company_name(query)
-    ticker=get_stock_ticker(query)
+    ticker=get_stock_ticker(company_name)
     print({"Query":query,"Company_name":company_name,"Ticker":ticker})
     stock_data=get_stock_price(ticker,history=10)
     stock_financials=get_financial_statements(ticker)
@@ -157,7 +157,7 @@ def Anazlyze_stock(query):
     pplx_key = llm_api
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
-        "model": "mixtral-8x7b-instruct",
+        "model": "pplx-7b-chat",
         "temperature": 0,
         "messages": [
             {
@@ -181,6 +181,8 @@ def Anazlyze_stock(query):
     
     # Parse the JSON data
     parsed_json = json.loads(json_data)
+    
+    print(parsed_json)
 
     # Access and print the "content"
     answer_analysis = parsed_json["choices"][0]["message"]["content"]
