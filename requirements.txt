@@ -3,3 +3,4 @@ streamlit
 openai
 bs4
 yfinance
+argostranslate
