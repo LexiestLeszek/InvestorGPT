@@ -6,10 +6,10 @@ import requests
 from googlesearch import search
 import translators as ts
 import json
-
 import yfinance as yf
-
 import warnings
+import argostranslate.package
+import argostranslate.translate
 import os
 warnings.filterwarnings("ignore")
 
@@ -145,7 +145,7 @@ def Anazlyze_stock(query):
     
     system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
             Give detailed stock analysis and use the available data and provide investment recommendation. \
-             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer"
+             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
     prompt = f"Give detailed stock analysis and use the available data and provide investment recommendation. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
@@ -185,8 +185,23 @@ def Anazlyze_stock(query):
     print(parsed_json)
 
     # Access and print the "content"
-    answer_analysis = parsed_json["choices"][0]["message"]["content"]
+    answer = parsed_json["choices"][0]["message"]["content"]
     
-    print(answer_analysis)
+    from_code = "en"
+    to_code = "ru"
+    
+    # Download and install Argos Translate package
+    argostranslate.package.update_package_index()
+    available_packages = argostranslate.package.get_available_packages()
+    package_to_install = next(
+        filter(
+            lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+        )
+    )
+    argostranslate.package.install_from_path(package_to_install.download())
+    
+    answer = argostranslate.translate.translate(answer, from_code, to_code)
+    
+    print(answer)
 
-    return answer_analysis
+    return answer
