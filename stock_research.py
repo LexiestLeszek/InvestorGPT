@@ -79,7 +79,7 @@ def scrape_webpage(url):
     try:
         page = requests.get(url)
         soup = BeautifulSoup(page.content, 'html.parser')
-        text = ' '.join([p.get_text() for p in soup.find_all('p')])
+        text = ' '.join([p.get_text() for p in soup.find_all('p','<h1>', '<h2>','<span>')])
         return text
     except Exception as e:
         print(f"Failed to scrape {url}: {e}")
@@ -121,7 +121,6 @@ def get_company_name(query):
     
     system_prompt = "Given the user request, answer what is the company name in English in user's prompt. Answer only with the company name in English and nothing else, not even a period or comma."
 
-    # Access and print the "content"
     company_name = llm_inference(system_prompt, query)
     
     print(company_name)
@@ -136,8 +135,8 @@ def get_stock_ticker(company_name):
     res = requests.get(url=yfinance, params=params, headers={'User-Agent': user_agent})
     data = res.json()
 
-    company_code = data['quotes'][0]['symbol']
-    return company_code
+    company_ticker = data['quotes'][0]['symbol']
+    return company_ticker
 
 def Anazlyze_stock(query):
     #agent.run(query) Outputs Company name, Ticker
