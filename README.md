@@ -11,11 +11,6 @@ The bot incorporates several tools and functions that retrieve real-time informa
 
 These factors provide a comprehensive view of the company's historical performance and current market sentiment. Additional tools can be added as needed.
 
-### LangChain ReAct agent
-
-The response and action agent were initially used for stock analysis, but the results were inconsistent. This approach involves a dynamic thought process during runtime, with actions based on the agent's thoughts. However, it may get stuck in an infinite loop of thoughts and actions, making it unsuitable for complex tasks such as stock analysis. Further improvements can be made by modifying the prompt.
-
-
 #### Example
 
 Input
