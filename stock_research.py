@@ -15,6 +15,44 @@ warnings.filterwarnings("ignore")
 
 llm_api = ""
 
+def llm_inference(system_prompt, user_prompt):
+    pplx_key = llm_api
+    url = "https://api.perplexity.ai/chat/completions"
+    payload = {
+        "model": "pplx-7b-chat",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": user_prompt
+            }
+        ]
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": "Bearer " + pplx_key
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    
+    json_data = response.text
+    
+    # Parse the JSON data
+    parsed_json = json.loads(json_data)
+
+    # Access and print the "content"
+    answer = parsed_json["choices"][0]["message"]["content"]
+    
+    #company_name = translate_text(company_name,"ru","en")
+    
+    print(answer)
+    
+    return answer
+
 # Fetch stock data from Yahoo Finance
 def get_stock_price(ticker,history=5):
     #time.sleep(4) #To avoid rate limit error
@@ -81,38 +119,10 @@ def get_financial_statements(ticker):
 
 def get_company_name(query):
     
-    pplx_key = llm_api
-    url = "https://api.perplexity.ai/chat/completions"
-    payload = {
-        "model": "pplx-7b-chat",
-        "temperature": 0,
-        "messages": [
-            {
-                "role": "system",
-                "content": f"Given the user request, what is the company name in English? Answer only with the company name in English and nothing else, not even a period or comma: {query}?"
-            },
-            {
-                "role": "user",
-                "content": query
-            }
-        ]
-    }
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "Authorization": "Bearer " + pplx_key
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    
-    json_data = response.text
-    
-    # Parse the JSON data
-    parsed_json = json.loads(json_data)
+    system_prompt = "Given the user request, answer what is the company name in English in user's prompt. Answer only with the company name in English and nothing else, not even a period or comma."
 
     # Access and print the "content"
-    company_name = parsed_json["choices"][0]["message"]["content"]
-    
-    #company_name = translate_text(company_name,"ru","en")
+    company_name = llm_inference(system_prompt, query)
     
     print(company_name)
     
@@ -147,45 +157,15 @@ def Anazlyze_stock(query):
             Give detailed stock analysis and use the available data and provide investment recommendation. \
              The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
-    prompt = f"Give detailed stock analysis and use the available data and provide investment recommendation. \
+    user_prompt = f"Give detailed stock analysis and use the available data and provide investment recommendation. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
             User question: {query} \
             You have the following information available about {company_name}. Write 5-8 bulle tpoints about investment analysis to answer user query, At the end conclude with proper explaination and a certain decision (buy or don't buy) about this company's stock.  : \
             {available_information}. \
             A good rule of thumb that you should use is 'buy rumors and sell news', use that rule when analyzing the stock."
     
-    pplx_key = llm_api
-    url = "https://api.perplexity.ai/chat/completions"
-    payload = {
-        "model": "pplx-7b-chat",
-        "temperature": 0,
-        "messages": [
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    }
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "Authorization": "Bearer " + pplx_key
-    }
-    response = requests.post(url, json=payload, headers=headers)
     
-    json_data = response.text
-    
-    # Parse the JSON data
-    parsed_json = json.loads(json_data)
-    
-    print(parsed_json)
-
-    # Access and print the "content"
-    answer = parsed_json["choices"][0]["message"]["content"]
+    answer = llm_inference(system_prompt, user_prompt)
     
     from_code = "en"
     to_code = "ru"
