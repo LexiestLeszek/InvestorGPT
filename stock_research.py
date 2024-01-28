@@ -152,14 +152,14 @@ def Anazlyze_stock(query):
     
     system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
             Give detailed stock analysis and use the available data and provide investment recommendation. \
-             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
+            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
-    user_prompt = f"Give detailed stock analysis and use the available data and provide investment recommendation. \
+    user_prompt = f"Give detailed stock analysis and use the available data and provide concrete investment recommendation in the binary form - invest or not to invest. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
             User question: {query} \
-            You have the following information available about {company_name}. Write 5-8 bulle tpoints about investment analysis to answer user query, At the end conclude with proper explaination and a certain decision (buy or don't buy) about this company's stock.  : \
+            You have the following information available about {company_name}. Write 5-8 bullet points about investment analysis to answer user query, each bullet point should be whether a positive or negative factor for potential investment. At the end conclude with proper explaination and a certain decision (invest or don't invest) about this company's stock.  : \
             {available_information}. \
-            A good rule of thumb that you should use is 'buy rumors and sell news', use that rule when analyzing the stock."
+            During your analysis, a good rule of thumb that you should use when assessing the company is 'buy rumors and sell news', use that rule when analyzing the stock."
     
     
     answer = llm_inference(system_prompt, user_prompt)
