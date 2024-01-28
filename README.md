@@ -37,3 +37,7 @@ Investment Thesis for Apple Inc.:
 Conclusion:
 Based on the available data, investing in Apple Inc. right now could be a favorable option. The company has strong financials and a positive stock price trend. Additionally, Apple's high revenues and positive news coverage suggest that the company is performing well and has a strong market presence. However, it is important to conduct further research and analysis to assess the potential risks associated with the technology sector and the company's competitive position.
 `
+
+### Not a financial or investment advice!
+
+This program is made for educational purposes and doesn't provide investment or financial (or any other) advice. Please use it to your own discretion and risks.
