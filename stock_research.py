@@ -47,8 +47,6 @@ def llm_inference(system_prompt, user_prompt):
     # Access and print the "content"
     answer = parsed_json["choices"][0]["message"]["content"]
     
-    #company_name = translate_text(company_name,"ru","en")
-    
     print(answer)
     
     return answer
@@ -181,6 +179,6 @@ def Anazlyze_stock(query):
     
     answer = argostranslate.translate.translate(answer, from_code, to_code)
     
-    print(answer)
+    print("Final answer:\n\n", answer)
 
     return answer
