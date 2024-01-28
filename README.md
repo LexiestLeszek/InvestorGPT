@@ -11,7 +11,7 @@ The bot incorporates several tools and functions that retrieve real-time informa
 
 These factors provide a comprehensive view of the company's historical performance and current market sentiment. Additional tools can be added as needed.
 
-#### Example
+### Example
 
 Input
 
