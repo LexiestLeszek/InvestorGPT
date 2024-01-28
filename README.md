@@ -24,7 +24,7 @@ Input
 
 Formatting
 
-`Query': 'Shall I invest in Apple Inc. right now?', 'Company_name': 'Apple Inc.', 'Ticker': 'AAPL'}`
+`Query': 'Is it a good time to invest in Apple Inc.?', 'Company_name': 'Apple Inc.', 'Ticker': 'AAPL'}`
 
 Analyzing.....
 
