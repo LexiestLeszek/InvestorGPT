@@ -1,10 +1,10 @@
 ### StockBot 📈
 
-A LangChain and LLM-based AI system designed to assist with stock investment by utilizing real-time and historical financial data. As a retail investor without a finance background, understanding complex financial terms can be challenging and time-consuming. To address this issue, we have developed an AI bot that leverages LLM technology to provide investment analysis.
+A LangChain and LLM-based agent designed to assist with stock investment by utilizing real-time and historical financial data. As a retail investor without a finance background, understanding complex financial terms can be challenging and time-consuming. To address this issue, we have developed an AI bot that leverages LLM technology to provide investment analysis.
 
 ### Data sources
 
-The bot incorporates several tools and functions that retrieve real-time information related to the stock of interest. Key data sources include:
+The agent incorporates several tools and functions that retrieve real-time information related to the stock of interest. Key data sources include:
 - Company's financial statements;
 - Historic stock price data (e.g., 1 month or 1 year, depending on the model's context length);
 - Latest company-related news.
