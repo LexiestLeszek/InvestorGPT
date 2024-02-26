@@ -15,7 +15,7 @@ These factors provide a comprehensive view of the company's historical performan
 
 Calculate the fair market value of a company using one of the following or all of the methods:
 
-*** Non-market value ***
+# Non-market value 
 1. **Book Value**:
    - **Explanation**: Book value is the value of a company's assets minus its liabilities as reported on the balance sheet. It represents the net worth of a company based on historical costs.
    - **Formula**: Book Value = Total Assets - Total Liabilities
@@ -32,7 +32,7 @@ Calculate the fair market value of a company using one of the following or all o
    - **Explanation**: This formula calculates the present value of an infinite series of cash flows growing at a constant rate, providing an estimate of the total value.
    - **Formula**: PV = C / (r-g)
 
-*** Market Value ***
+# Market Value 
 1. **Market Capitalization**:
    - **Explanation**: Market cap is the total market value of a company's outstanding shares. It reflects what the market values the company at.
    - **Formula**: Market Cap = Share Price x Total Shares Outstanding
