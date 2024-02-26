@@ -11,32 +11,37 @@ The agent incorporates several tools and functions that retrieve real-time infor
 
 These factors provide a comprehensive view of the company's historical performance and current market sentiment. Additional tools can be added as needed.
 
-### Example
+### TODO:
 
-Input
+Calculate the fair market value of a company using one of the following or all of the methods:
 
-`Analyze_stock("Is it a good time to invest in Apple Inc.?")`
+Certainly! Here are detailed explanations and formulas for each of the methods mentioned:
 
-Formatting
+1. **Book Value**:
+   - **Explanation**: Book value is the value of a company's assets minus its liabilities as reported on the balance sheet. It represents the net worth of a company based on historical costs.
+   - **Formula**: Book Value = Total Assets - Total Liabilities
 
-`Query': 'Is it a good time to invest in Apple Inc.?', 'Company_name': 'Apple Inc.', 'Ticker': 'AAPL'}`
+2. **Discounted Cash Flow (DCF) Analysis**:
+   - **Explanation**: DCF estimates the present value of a company based on its expected future cash flows. It considers the time value of money, risk, and growth potential.
+   - **Formula**: DCF = CF1 / (1+r)^1 + CF2 / (1+r)^2 + ... + CFn / (1+r)^n
 
-Analyzing.....
+3. **Market Capitalization**:
+   - **Explanation**: Market cap is the total market value of a company's outstanding shares. It reflects what the market values the company at.
+   - **Formula**: Market Cap = Share Price x Total Shares Outstanding
 
-Output:
+4. **Enterprise Value**:
+   - **Explanation**: Enterprise value is a comprehensive measure of a company's total value, including debt and equity. It provides a more accurate picture of a company's worth.
+   - **Formula**: Enterprise Value = Market Cap + Total Debt - Cash and Cash Equivalents
 
-`
-Investment Thesis for Apple Inc.:
+5. **Earnings Multiplier**:
+   - **Explanation**: The earnings multiplier, or P/E ratio, compares a company's stock price to its earnings per share, indicating how much investors are willing to pay for each dollar of earnings.
+   - **Formula**: Earnings Multiplier = Stock Price / Earnings Per Share
 
-1. Strong Financials: Apple Inc. has shown consistent growth in its financials over the past few years. The company has a positive tangible book value, indicating a strong asset base. Additionally, the company has a high invested capital, which suggests a strong financial position.
-2. Increasing Stock Price: The stock price of Apple Inc. has been increasing steadily over the past few days. This indicates positive investor sentiment and potential for further growth in the future.
-3. High Revenues: Apple Inc. has reported high revenues in its recent quarterly results. This indicates that the company is performing well and has a strong market presence.
-4. Positive News Coverage: Apple Inc. has been in the news recently, with multiple articles highlighting the company's performance and prospects. Positive news coverage can attract more investors and potentially drive up the stock price.
-5. Technology Sector Outlook: The technology sector in the US is expected to grow in the coming years due to increasing demand for consumer electronics and digital services. Apple Inc., being a major player in the sector, is well-positioned to benefit from this growth. However, it is important to consider the competitive landscape and regulatory environment of the sector before making an investment decision.
+6. **Present Value of a Growing Perpetuity Formula**:
+   - **Explanation**: This formula calculates the present value of an infinite series of cash flows growing at a constant rate, providing an estimate of the total value.
+   - **Formula**: PV = C / (r-g)
 
-Conclusion:
-Based on the available data, investing in Apple Inc. right now could be a favorable option. The company has strong financials and a positive stock price trend. Additionally, Apple's high revenues and positive news coverage suggest that the company is performing well and has a strong market presence. However, it is important to conduct further research and analysis to assess the potential risks associated with the technology sector and the company's competitive position.
-`
+These formulas can be used to assess a company's fair value based on different financial metrics and projections, aiding in investment decisions and valuation analysis.
 
 ### Not a financial or investment advice!
 
