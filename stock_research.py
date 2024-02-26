@@ -1,25 +1,19 @@
+PERPLEXITY_API = ""
+
 import json
-import time
 from bs4 import BeautifulSoup
-import re
 import requests
 from googlesearch import search
-import translators as ts
-import json
+import time
 import yfinance as yf
 import warnings
-import argostranslate.package
-import argostranslate.translate
-import os
 warnings.filterwarnings("ignore")
 
-llm_api = ""
-
 def llm_inference(system_prompt, user_prompt):
-    pplx_key = llm_api
+    pplx_key = PERPLEXITY_API
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
-        "model": "pplx-7b-chat",
+        "model": "sonar-small-chat",
         "temperature": 0,
         "messages": [
             {
@@ -93,27 +87,52 @@ def get_recent_stock_news(company_name):
     
     news_string = '\n'.join(news)
 
-    top3_news="Recent News:\n\n"+news_string
+    top3_news=f"Recent News about {company_name}:\n"+news_string
     
     print(top3_news)
     
     return top3_news
 
 # Fetch financial statements from Yahoo Finance
+
 def get_financial_statements(ticker):
-    # time.sleep(4) #To avoid rate limit error
+    # To avoid rate limit error
+    time.sleep(4)
+    
+    # Ensure ticker is in the correct format
     if "." in ticker:
-        ticker=ticker.split(".")[0]
-    else:
-        ticker=ticker
-    ticker=ticker
+        ticker = ticker.split(".")[0]
+    
+    # Fetch the company information using the ticker symbol
     company = yf.Ticker(ticker)
+    
+    # Fetch and process the balance sheet
     balance_sheet = company.balance_sheet
-    if balance_sheet.shape[1]>=3:
-        balance_sheet=balance_sheet.iloc[:,:3]    # Remove 4th years data
-    balance_sheet=balance_sheet.dropna(how="any")
-    balance_sheet = balance_sheet.to_string()
-    return balance_sheet
+    if balance_sheet.shape[1] >=  3:
+        balance_sheet = balance_sheet.iloc[:, :3]  # Keep only the first three years of data
+    balance_sheet = balance_sheet.dropna(how="any")
+    balance_sheet_str = balance_sheet.to_string()
+    
+    # Fetch and process the income statement
+    income_statement = company.financials
+    if income_statement.shape[1] >=  3:
+        income_statement = income_statement.iloc[:, :3]  # Keep only the first three years of data
+    income_statement = income_statement.dropna(how="any")
+    income_statement_str = income_statement.to_string()
+    
+    # Fetch and process the cash flow statement
+    cash_flow_statement = company.cashflow
+    if cash_flow_statement.shape[1] >=  3:
+        cash_flow_statement = cash_flow_statement.iloc[:, :3]  # Keep only the first three years of data
+    cash_flow_statement = cash_flow_statement.dropna(how="any")
+    cash_flow_statement_str = cash_flow_statement.to_string()
+    
+    # Return all three financial statements as strings
+    return {
+        "Balance Sheet": balance_sheet_str,
+        "Income Statement": income_statement_str,
+        "Cash Flow Statement": cash_flow_statement_str
+    }
 
 def get_company_name(query):
     
@@ -145,7 +164,7 @@ def Anazlyze_stock(query):
     stock_financials=get_financial_statements(ticker)
     stock_news=get_recent_stock_news(company_name)
 
-    available_information=f"Stock Price: {stock_data}\n\nStock Financials: {stock_financials}\n\nStock News: {stock_news}"
+    available_information=f"Stock Price: {stock_data}\n\nStock Financial Statements: {stock_financials}\n\nStock News: {stock_news}"
     #available_information=f"Stock Financials: {stock_financials}\n\nStock News: {stock_news}"
 
     # print("\n\nAnalyzing.....\n")
@@ -164,6 +183,8 @@ def Anazlyze_stock(query):
     
     answer = llm_inference(system_prompt, user_prompt)
     
+    '''
+    
     from_code = "en"
     to_code = "ru"
     
@@ -180,5 +201,7 @@ def Anazlyze_stock(query):
     answer = argostranslate.translate.translate(answer, from_code, to_code)
     
     print("Final answer:\n\n", answer)
-
+    
+    '''
+    
     return answer
