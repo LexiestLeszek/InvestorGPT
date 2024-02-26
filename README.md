@@ -46,7 +46,9 @@ Implement "HedgeFund advisorBot": If the company's Non-market value is less than
 ### Formula for determing whether to buy or not the company: 
 If company is undervalued (Market Value < Book value), then formula on when to buy it:
 
-`(Market Value - Book Value) * probability of fixing the problem`
+`(Market Value - Book Value) * probability of fixing the problem
+AND
+Price / Earnings is lower than the benchmark`
 
 If the number is positive - Buy, If the number is negative - don't buy.
 If you bought, sell when Book Value = Market Value.
