@@ -8,6 +8,30 @@ import time
 import yfinance as yf
 import warnings
 warnings.filterwarnings("ignore")
+from edgar import *
+import datetime
+
+
+def get_10k_10q(ticker):
+    
+    curr_year = datetime.datetime.now().year
+    
+    filings_lists_text = []
+    
+    set_identity("Michael Mccallum mike.mccalum@indigo.com")
+    
+    filings = Company(ticker).get_filings(year=range(curr_year-3, curr_year))
+    
+    filings.filter(form=["10-K", "10-Q"])
+    
+    for i in filings:
+        filing = filings[i].text()
+        filings_lists_text.append(filing)
+        
+      
+    filings_text = '.\n'.join(filings_lists_text)
+    
+    return filings_text
 
 def llm_inference(system_prompt, user_prompt):
     pplx_key = PERPLEXITY_API
@@ -161,13 +185,21 @@ def Anazlyze_stock(query):
     ticker=get_stock_ticker(company_name)
     print({"Query":query,"Company_name":company_name,"Ticker":ticker})
     stock_data=get_stock_price(ticker,history=10)
-    stock_financials=get_financial_statements(ticker)
+    tenk_tenq = get_10k_10q(ticker)
+    financial_statements=get_financial_statements(ticker)
+    balance_sheet_str = financial_statements["Balance Sheet"]
+    income_statement_str = financial_statements["Income Statement"]
+    cash_flow_statement_str = financial_statements["Cash Flow Statement"]
     stock_news=get_recent_stock_news(company_name)
 
-    available_information=f"Stock Price: {stock_data}\n\nStock Financial Statements: {stock_financials}\n\nStock News: {stock_news}"
-    #available_information=f"Stock Financials: {stock_financials}\n\nStock News: {stock_news}"
-
-    # print("\n\nAnalyzing.....\n")
+    available_information=f"""
+    Stock Current Price: {stock_data}\n\n
+    Stock Balance Sheet: {balance_sheet_str}\n\n
+    Stock Income Statement: {income_statement_str}\n\n
+    Stock Cashflow Statement: {cash_flow_statement_str}\n\n
+    Stock 10-K and 10-Q for the past few years: {tenk_tenq}\n\n
+    Stock News: {stock_news}
+    """
     
     system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
             Give detailed stock analysis and use the available data and provide investment recommendation. \
