@@ -41,7 +41,7 @@ Calculate the fair market value of a company using one of the following or all o
    - **Explanation**: Enterprise value is a comprehensive measure of a company's total value, including debt and equity. It provides a more accurate picture of a company's worth.
    - **Formula**: Enterprise Value = Market Cap + Total Debt - Cash and Cash Equivalents
 
-**IMPORTANT**: If the company's book value and DCF value is less than its market capitalization (price per stock x # of stocks) - the company is undervalued. If company's stock dropped due to bad news or sudden problems - calculate the probability of the company to be able to fix the problem and buy based on this risk if the return is positive.
+**TODO**: Implement "HedgeFund advisorBot": If the company's Non-market value is less than its Market Value (price per stock x # of stocks) - the company is undervalued. If company's stock dropped due to bad news or sudden problems - calculate the probability of the company to be able to fix the problem and buy based on this risk if the return is positive.
 
 # Not a financial or investment advice!
 
