@@ -178,11 +178,37 @@ def get_financial_statements(ticker):
     balance_sheet = balance_sheet.to_string()
     return balance_sheet
 
-def get_company_name(query):
-    
-    system_prompt = "Given the user request, answer what is the company name in English in user's prompt. Answer only with the company name in English and nothing else, not even a period or comma."
+def get_company_name(ticker):
 
-    company_name = llm_inference(system_prompt, query)
+    user_prompt = f"""
+        What is the company name that has {ticker} stock ticker? Answer only with the company name and nothing else."""
+    
+    pplx_key = llm_api
+    url = "https://api.perplexity.ai/chat/completions"
+    payload = {
+        "model": "sonar-medium-online",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "user",
+                "content": user_prompt
+            }
+        ]
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": "Bearer " + pplx_key
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    
+    json_data = response.text
+    
+    # Parse the JSON data
+    parsed_json = json.loads(json_data)
+
+    # Access and print the "content"
+    company_name = parsed_json["choices"][0]["message"]["content"]
     
     print(company_name)
     
@@ -199,11 +225,9 @@ def get_stock_ticker(company_name):
     company_ticker = data['quotes'][0]['symbol']
     return company_ticker
 
-def Anazlyze_stock(query,percentage_drop):
-    #agent.run(query) Outputs Company name, Ticker
-    company_name = get_company_name(query)
+def Anazlyze_stock(ticker,percentage_drop):
+    company_name = get_company_name(ticker)
     ticker=get_stock_ticker(company_name)
-    print({"Query":query,"Company_name":company_name,"Ticker":ticker})
     stock_price=get_stock_price(ticker,history=20)
     stock_financials=get_financial_statements(ticker)
     bad_news=why_price_dropped(company_name)
@@ -225,17 +249,22 @@ def Anazlyze_stock(query,percentage_drop):
             Your answer must be only a number of percents and nothing more.
             Examples: 34, 55, 74.
             Question: What is the probability of the company to fix the reasons that dropped the price and recover its stock price?
-            Answer:
+            Answer in percentage:
             """
     
-    book_value = "1000"
-    market_value = "1300"
+    book_value = 1000
+    market_value = 1305
     
     probability_to_fix = llm_inference(system_prompt, user_prompt)
+    print(probability_to_fix)
     
-    float_number = float(probability_to_fix)
-    # Convert to percentage
-    prob_float = float_number /  100
+    pattern = r'\d+%'  # Pattern to match percentages
+    match = re.search(pattern, probability_to_fix)
+    
+    if match:
+    
+        prob_float = match.start()
+    
     formula = (book_value-market_value) * prob_float
     if formula > 0:
         result = formula / book_value
@@ -250,5 +279,8 @@ def Anazlyze_stock(query,percentage_drop):
         print(result_string)
         return False
 
-losers = get_losers()
-print(losers)
+ticker = "AAPL"
+percentage_drop = "32"
+rec = Anazlyze_stock(ticker,percentage_drop)
+print("##################\n\n")
+print(f"Recommendation is: {rec}")
