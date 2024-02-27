@@ -217,12 +217,14 @@ def Anazlyze_stock(ticker,percentage_drop):
     stock_price=get_stock_price(ticker,history=20)
     stock_financials=get_3financial_statements(ticker)
     bad_news=why_price_dropped(company_name)
-    print(stock_price)
 
     available_information=f"""
             {company_name} Stock Price dynamic for the past 30 days: {stock_price}\n\n
             {company_name} Financials: {stock_financials}\n\n
-            {company_name} stock price fell by {percentage_drop} due to {bad_news}."""
+            {company_name} stock price fell by {percentage_drop} due to {bad_news}.
+            """
+    
+    print(available_information)
     
     system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
             Give detailed stock analysis and use the available data and provide investment recommendation. \
@@ -232,15 +234,17 @@ def Anazlyze_stock(ticker,percentage_drop):
             {company_name} stock has dropped by {percentage_drop} and you need to estimate the probability of the company being able to fix its problems.
             Use and analyze this information about {company_name}:
             {available_information}\n\n
+            Give your precise percentage estimation of how likely will the company successfully fix its problems to return stock price back to all time high.
             Your answer must be only a number of percents and nothing more.
             Examples of acceptable answers: 34%, 55%, 74%.
             Question: What is the probability of the company to fix the reasons that dropped the price and recover its stock price?
             Answer in percentage:
             """
+    
     print("##########################################\n\n")
     
-    book_value = 1500
-    market_value = 1805
+    book_value = 2500 # TODO: add logic (yfinance)
+    market_value = 1805 # TODO: add logic (yfinance)
     
     probability_to_fix = llm_inference(system_prompt, user_prompt)
     
@@ -260,27 +264,28 @@ def Anazlyze_stock(ticker,percentage_drop):
     print("Probability to fix: ",prob_int)
     
     formula = net_value * prob_int
+    formula = round(formula,2)
     
     print("Net Value * Probability to fix the problems: ",formula)
     
     roi = formula/market_value
+    roi_round = round(roi,4)
+    roi_percentage = roi_round * 100
+    roi_percentage_round = round(roi_percentage,1)
+    print(f"ROI (NetValue*ProbFix / MarketValue): {roi_percentage_round}%")
     
     if formula > 0:
-        print(f"Formula result: {formula}")
-        result_string = f"Buy {company_name}, potential ROI is {round(roi,4)}"
-        print(result_string)
+        print("**Buy ",company_name)
         return True
     else:
-        print(f"Formula result: {formula}")
-        result_string = f"DO NOT BUY {company_name}, negative ROI is {round(roi,4)}"
-        print(result_string)
+        print("**DO NOT BUY ",company_name)
         return False
 
-ticker = "AAPL"
-percentage_drop = "0.32"
+ticker = "MSFT"
+percentage_drop = "0.39"
 rec = Anazlyze_stock(ticker,percentage_drop)
-print("##########################################\n\n")
 print(f"Recommendation is: {rec}")
+print("##########################################\n\n")
 
 #TODO
 # 1. Add getting Book Value
