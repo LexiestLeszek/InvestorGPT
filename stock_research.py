@@ -11,27 +11,57 @@ import warnings
 warnings.filterwarnings("ignore")
 from edgar import *
 import datetime
+import pandas as pd
+import re
+
+def get_recommendation(company_name,book_value,market_value,probability_to_fix_problem_number):
+    float_number = float(probability_to_fix_problem_number)
+    # Convert to percentage
+    prob_float = float_number /  100
+    formula = (book_value-market_value) * prob_float
+    if formula > 0:
+        answ_string = f"You should invest in {company_name}, the company's current value is {formula} whil book value is {book_value}."
+        return answ_string
+    else:
+        answ_string = f"DO NOT invest in {company_name}, the company's current value is {formula} whil book value is {book_value}."
+        return False
+
+def get_number(input_string):
+    # Find all sequences of digits in the string
+    numbers = re.findall(r'\d+', input_string)
+    # If there are no numbers, return None
+    if not numbers:
+        return None
+    # Otherwise, return the first number found
+    return numbers[0]
 
 
-def get_10k(ticker):
+def monitor_stock_drop(tickers, lookback_period='1d'):
+    """
+    Monitors the stock prices of the given tickers and prints a message if any stock drops more than  12% in a day.
     
-    curr_year = datetime.datetime.now().year
-    
-    filings_lists_text = []
-    
-    set_identity("Michael Mccallum mike.mccalum@indigo.com")
-    
-    filings = Company(ticker).get_filings(year=range(curr_year-2, curr_year-1))
-    
-    filings.filter(form=["10-K"])
-    
-    for i in filings:
-        filing = filings[i].text()
-        filings_lists_text.append(filing)
-        
-    filings_string = '.\n'.join(filings_lists_text)
-    
-    return filings_string
+    Parameters:
+    - tickers (list): A list of ticker symbols for the companies to monitor.
+    - lookback_period (str): The period to look back for price comparison (default is '1d' for  1 day).
+    """
+    # Fetch stock data for each ticker
+    for ticker in tickers:
+        try:
+            stock_data = yf.download(ticker, period=lookback_period, interval='1d')
+            if not stock_data.empty:
+                # Calculate the percentage change in closing price from the previous day
+                percentage_change = (stock_data['Close'][0] - stock_data['Close'][1]) / stock_data['Close'][1] *  100
+                
+                # Check if the percentage change is more than  12%
+                if percentage_change >  30:
+                    print(f"{ticker} stock has fallen more than  12% in a day.")
+        except Exception as e:
+            print(f"Error fetching data for {ticker}: {e}")
+
+# Example usage
+top_1000_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "FB", "TSLA", "BRK.B", "JNJ", "V", "JPM"]  # Add all  1000 ticker symbols here
+monitor_stock_drop(top_1000_tickers)
+
 
 def llm_inference(system_prompt, user_prompt):
     pplx_key = PERPLEXITY_API
@@ -205,37 +235,64 @@ def Anazlyze_stock(query):
                 Stock Income Statement:{income_statement_str}\n
                 Stock Cashflow Statement{cash_flow_statement_str}\n
                 """
+    book_value = ""
+    market_value = ""
     stock_news=get_recent_stock_news(company_name)
-
+    
+    stock_drop_percentage = ""
     
     available_information=f"""
-    Current Stock Price: {stock_data}\n\n
     Financial Reports: {financial_statements_str}\n\n
-    Stock News: {stock_news}
+    Recent Stock News: {stock_news}\n\n
+    Stock Price history: {stock_data}\n\n
+    Company's Stock Price dropped by {stock_drop_percentage} today.
     """
+
+    system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
+            Give detailed stock analysis and use the available data and provide investment recommendation. \
+            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
-    '''
+    user_prompt = f"""You are a risk manager and professional risk analyst. \
+            You have the following available information about {company_name}: \n{available_information}.\n
+            Question: Based on available information about {company_name}, what was the main reason the stock fell by {stock_drop_percentage} today? \
+            Answer:
+            """
     
-    available_information=f"""
-    Stock Current Price: {stock_data}\n\n
-    Stock 10-k filling for the past 4 years: {tenk}\n\n
-    Stock News: {stock_news}
-    """
-    '''
+    why_price_dropped = llm_inference(system_prompt, user_prompt)
+    
+    system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
+            Give detailed stock analysis and use the available data and provide investment recommendation. \
+            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
+    
+    user_prompt = f"""You are a risk manager and professional risk analyst. \
+            You need to answer the probability question about the company's chances to fix their problem.
+            Give the answer strictly as the probabiliy to fix the problem in percentage. Examples: 12 percent, 47 percent, 88 percent.
+            You have the following available information about {company_name}: \n{available_information}.\n
+            Based on available information about {company_name}, we know the stock price dropped because {why_price_dropped}. \
+            Question: what is the percentage chace that the {company_name} will be able to fix the problem in the next year?
+            Answer in percentage:
+            """
+    
+    probability_to_fix_problem = llm_inference(system_prompt, user_prompt)
+    
+    probability_to_fix_problem_number = get_number(probability_to_fix_problem)
+    
+    recommendation = get_recommendation(company_name,book_value,market_value,probability_to_fix_problem_number)
+    
     system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
             Give detailed stock analysis and use the available data and provide investment recommendation. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
     user_prompt = f"""Give detailed stock analysis and use the available data to provide concrete investment recommendation in the binary form - invest or not to invest. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
-            You have the following information available about {company_name}. Write 5-8 bullet points about investment analysis to answer user query, each bullet point should be whether a positive or negative factor for potential investment. At the end conclude with proper explaination and a certain decision (invest or don't invest) about this company's stock. \
-            Available information about the company:
-            {available_information}. \
+            You have the following information available about {company_name}: {available_information}. \n
+            Based on available information about {company_name}, we know the stock price dropped because {why_price_dropped}. \
+            Write 5-8 bullet points about investment analysis to answer user query, each bullet point should be whether a positive or negative factor for potential investment. 
+            At the end conclude with proper explaination and a certain decision (invest or don't invest) about this company's stock. \
+            Also answer how would recent Stock News affect the company and its perspectives. Try to asses how likely is it for the company to fix the problem.
             During your analysis, a good rule of thumb that you should use when assessing the company is 'buy rumors and sell news', use that rule when analyzing the stock. 
-            User question: {query} \
             """
     
+    answer_analysis = llm_inference(system_prompt, user_prompt)
     
-    answer = llm_inference(system_prompt, user_prompt)
-    
-    return answer
+    return recommendation, answer_analysis
