@@ -59,20 +59,6 @@ def get_losers():
     assets = soup.find_all('a', attrs={"class":"Fw(600)"})
     return assets
 
-def get_recommendation(company_name,book_value,market_value,probability_to_fix_problem_number):
-    float_number = float(probability_to_fix_problem_number)
-    # Convert to percentage
-    prob_float = float_number /  100
-    formula = (book_value-market_value) * prob_float
-    if formula > 0:
-        result = formula / book_value
-        result_string = f"Buy {company_name}, its premium / book value is {result}"
-        return True, result_string
-    else:
-        result = formula / book_value
-        result_string = f"DO NOT BUY {company_name}, its premium / book value is {result}"
-        return False, result_string
-
 # Fetch stock data from Yahoo Finance
 def get_stock_price(ticker,history=5):
     #time.sleep(4) #To avoid rate limit error
