@@ -265,14 +265,19 @@ def Anazlyze_stock(ticker,percentage_drop):
     
         prob_float = match.start()
     
+    print(f"Book Value: {book_value}")
+    print(f"Market Cap: {market_value}\n")
+    
     formula = (book_value-market_value) * prob_float
     if formula > 0:
+        print(f"Formula result: {formula}")
         result = formula / book_value
         result_string = f"Buy {company_name}, its premium / book value is {result}"
         print(result)
         print(result_string)
         return True
     else:
+        print(f"Formula result: {formula}")
         result = formula / book_value
         result_string = f"DO NOT BUY {company_name}, its premium / book value is {result}"
         print(result)
