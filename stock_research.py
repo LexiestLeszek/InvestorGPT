@@ -1,5 +1,6 @@
 PERPLEXITY_API = ""
 
+
 import json
 from bs4 import BeautifulSoup
 import requests
@@ -12,7 +13,7 @@ from edgar import *
 import datetime
 
 
-def get_10k_10q(ticker):
+def get_10k(ticker):
     
     curr_year = datetime.datetime.now().year
     
@@ -20,24 +21,23 @@ def get_10k_10q(ticker):
     
     set_identity("Michael Mccallum mike.mccalum@indigo.com")
     
-    filings = Company(ticker).get_filings(year=range(curr_year-3, curr_year))
+    filings = Company(ticker).get_filings(year=range(curr_year-2, curr_year-1))
     
-    filings.filter(form=["10-K", "10-Q"])
+    filings.filter(form=["10-K"])
     
     for i in filings:
         filing = filings[i].text()
         filings_lists_text.append(filing)
         
-      
-    filings_text = '.\n'.join(filings_lists_text)
+    filings_string = '.\n'.join(filings_lists_text)
     
-    return filings_text
+    return filings_string
 
 def llm_inference(system_prompt, user_prompt):
     pplx_key = PERPLEXITY_API
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
-        "model": "sonar-small-chat",
+        "model": "sonar-medium-chat",
         "temperature": 0,
         "messages": [
             {
@@ -86,10 +86,28 @@ def get_stock_price(ticker,history=5):
     return df.to_string()
 
 def get_search_results(company_name):
+    
     query = f"{company_name} news"
-    search_results = search(query, num=3, stop=3, pause=2)
-    top_links = list(search_results)
-    return top_links
+    
+    try:
+        search_results = search(query, num=3, stop=3, pause=2)
+        top_links = list(search_results)
+        print(f"Search Urls: {top_links}")
+        return top_links
+    
+    except Exception as e:
+        print(f"Googlesearch error: {e}")
+        url = "https://www.google.com/search?q=" + query
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        search_results = soup.find_all('div', class_='g')
+        top_links = []
+        for result in search_results[:3]:
+            link = result.find('a')
+            top_links.append(link['href'])
+        print(f"Search Urls: {top_links}")
+        return top_links    
 
 def scrape_webpage(url):
     try:
@@ -152,11 +170,7 @@ def get_financial_statements(ticker):
     cash_flow_statement_str = cash_flow_statement.to_string()
     
     # Return all three financial statements as strings
-    return {
-        "Balance Sheet": balance_sheet_str,
-        "Income Statement": income_statement_str,
-        "Cash Flow Statement": cash_flow_statement_str
-    }
+    return balance_sheet_str, income_statement_str, cash_flow_statement_str
 
 def get_company_name(query):
     
@@ -185,55 +199,43 @@ def Anazlyze_stock(query):
     ticker=get_stock_ticker(company_name)
     print({"Query":query,"Company_name":company_name,"Ticker":ticker})
     stock_data=get_stock_price(ticker,history=10)
-    tenk_tenq = get_10k_10q(ticker)
-    financial_statements=get_financial_statements(ticker)
-    balance_sheet_str = financial_statements["Balance Sheet"]
-    income_statement_str = financial_statements["Income Statement"]
-    cash_flow_statement_str = financial_statements["Cash Flow Statement"]
+    balance_sheet_str, income_statement_str, cash_flow_statement_str = get_financial_statements(ticker)
+    financial_statements_str = f"""
+                Stock Balance Sheet: {balance_sheet_str}\n
+                Stock Income Statement:{income_statement_str}\n
+                Stock Cashflow Statement{cash_flow_statement_str}\n
+                """
     stock_news=get_recent_stock_news(company_name)
 
+    
     available_information=f"""
-    Stock Current Price: {stock_data}\n\n
-    Stock Balance Sheet: {balance_sheet_str}\n\n
-    Stock Income Statement: {income_statement_str}\n\n
-    Stock Cashflow Statement: {cash_flow_statement_str}\n\n
-    Stock 10-K and 10-Q for the past few years: {tenk_tenq}\n\n
+    Current Stock Price: {stock_data}\n\n
+    Financial Reports: {financial_statements_str}\n\n
     Stock News: {stock_news}
     """
     
+    '''
+    
+    available_information=f"""
+    Stock Current Price: {stock_data}\n\n
+    Stock 10-k filling for the past 4 years: {tenk}\n\n
+    Stock News: {stock_news}
+    """
+    '''
     system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
             Give detailed stock analysis and use the available data and provide investment recommendation. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
-    user_prompt = f"Give detailed stock analysis and use the available data and provide concrete investment recommendation in the binary form - invest or not to invest. \
+    user_prompt = f"""Give detailed stock analysis and use the available data to provide concrete investment recommendation in the binary form - invest or not to invest. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
-            User question: {query} \
-            You have the following information available about {company_name}. Write 5-8 bullet points about investment analysis to answer user query, each bullet point should be whether a positive or negative factor for potential investment. At the end conclude with proper explaination and a certain decision (invest or don't invest) about this company's stock.  : \
+            You have the following information available about {company_name}. Write 5-8 bullet points about investment analysis to answer user query, each bullet point should be whether a positive or negative factor for potential investment. At the end conclude with proper explaination and a certain decision (invest or don't invest) about this company's stock. \
+            Available information about the company:
             {available_information}. \
-            During your analysis, a good rule of thumb that you should use when assessing the company is 'buy rumors and sell news', use that rule when analyzing the stock."
+            During your analysis, a good rule of thumb that you should use when assessing the company is 'buy rumors and sell news', use that rule when analyzing the stock. 
+            User question: {query} \
+            """
     
     
     answer = llm_inference(system_prompt, user_prompt)
-    
-    '''
-    
-    from_code = "en"
-    to_code = "ru"
-    
-    # Download and install Argos Translate package
-    argostranslate.package.update_package_index()
-    available_packages = argostranslate.package.get_available_packages()
-    package_to_install = next(
-        filter(
-            lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
-        )
-    )
-    argostranslate.package.install_from_path(package_to_install.download())
-    
-    answer = argostranslate.translate.translate(answer, from_code, to_code)
-    
-    print("Final answer:\n\n", answer)
-    
-    '''
     
     return answer
