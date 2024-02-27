@@ -229,12 +229,12 @@ def Anazlyze_stock(ticker,percentage_drop):
     company_name = get_company_name(ticker)
     ticker=get_stock_ticker(company_name)
     stock_price=get_stock_price(ticker,history=20)
-    stock_financials=get_financial_statements(ticker)
+    stock_financials=get_3financial_statements(ticker)
     bad_news=why_price_dropped(company_name)
     print(stock_price)
 
     available_information=f"""
-            {company_name} Stock Price for the past 20 days: {stock_price}\n\n
+            {company_name} Stock Price dynamic for the past 30 days: {stock_price}\n\n
             {company_name} Financials: {stock_financials}\n\n
             {company_name} stock price fell by {percentage_drop} due to {bad_news}."""
     
@@ -247,45 +247,56 @@ def Anazlyze_stock(ticker,percentage_drop):
             Use and analyze this information about {company_name}:
             {available_information}\n\n
             Your answer must be only a number of percents and nothing more.
-            Examples: 34, 55, 74.
+            Examples of acceptable answers: 34%, 55%, 74%.
             Question: What is the probability of the company to fix the reasons that dropped the price and recover its stock price?
             Answer in percentage:
             """
+    print("##########################################\n\n")
     
-    book_value = 1000
-    market_value = 1305
+    book_value = 1500
+    market_value = 1805
     
     probability_to_fix = llm_inference(system_prompt, user_prompt)
-    print(probability_to_fix)
     
-    pattern = r'\d+%'  # Pattern to match percentages
-    match = re.search(pattern, probability_to_fix)
-    
+    match = re.search(r'(\d+)%', probability_to_fix)
     if match:
+        prob_int = int(match.group(1)) 
     
-        prob_float = match.start()
+    prob_int = prob_int / 100
     
     print(f"Book Value: {book_value}")
-    print(f"Market Cap: {market_value}\n")
+    print(f"Market Cap: {market_value}")
     
-    formula = (book_value-market_value) * prob_float
+    # basically ( book_value - market_value ) * probability to fix
+
+    net_value = book_value - market_value
+    print("Net Value: ", net_value)
+    print("Probability to fix: ",prob_int)
+    
+    formula = net_value * prob_int
+    
+    print("Net Value * Probability to fix the problems: ",formula)
+    
+    roi = formula/market_value
+    
     if formula > 0:
         print(f"Formula result: {formula}")
-        result = formula / book_value
-        result_string = f"Buy {company_name}, its premium / book value is {result}"
-        print(result)
+        result_string = f"Buy {company_name}, potential ROI is {round(roi,4)}"
         print(result_string)
         return True
     else:
         print(f"Formula result: {formula}")
-        result = formula / book_value
-        result_string = f"DO NOT BUY {company_name}, its premium / book value is {result}"
-        print(result)
+        result_string = f"DO NOT BUY {company_name}, negative ROI is {round(roi,4)}"
         print(result_string)
         return False
 
 ticker = "AAPL"
-percentage_drop = "32"
+percentage_drop = "0.32"
 rec = Anazlyze_stock(ticker,percentage_drop)
-print("##################\n\n")
+print("##########################################\n\n")
 print(f"Recommendation is: {rec}")
+
+#TODO
+# 1. Add getting Book Value
+# 2. Add getting Market Value
+# 3. Add monitoring today's (this week's) loosers and returning ticket and percentage drop
