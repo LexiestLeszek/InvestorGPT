@@ -1,70 +1,24 @@
 PERPLEXITY_API = ""
 
-
 import json
+import time
 from bs4 import BeautifulSoup
+import re
 import requests
 from googlesearch import search
-import time
+import translators as ts
+import json
 import yfinance as yf
 import warnings
+import argostranslate.package
+import argostranslate.translate
+import os
 warnings.filterwarnings("ignore")
-from edgar import *
-import datetime
-import pandas as pd
-import re
 
-def get_recommendation(company_name,book_value,market_value,probability_to_fix_problem_number):
-    float_number = float(probability_to_fix_problem_number)
-    # Convert to percentage
-    prob_float = float_number /  100
-    formula = (book_value-market_value) * prob_float
-    if formula > 0:
-        answ_string = f"You should invest in {company_name}, the company's current value is {formula} whil book value is {book_value}."
-        return answ_string
-    else:
-        answ_string = f"DO NOT invest in {company_name}, the company's current value is {formula} whil book value is {book_value}."
-        return False
-
-def get_number(input_string):
-    # Find all sequences of digits in the string
-    numbers = re.findall(r'\d+', input_string)
-    # If there are no numbers, return None
-    if not numbers:
-        return None
-    # Otherwise, return the first number found
-    return numbers[0]
-
-
-def monitor_stock_drop(tickers, lookback_period='1d'):
-    """
-    Monitors the stock prices of the given tickers and prints a message if any stock drops more than  12% in a day.
-    
-    Parameters:
-    - tickers (list): A list of ticker symbols for the companies to monitor.
-    - lookback_period (str): The period to look back for price comparison (default is '1d' for  1 day).
-    """
-    # Fetch stock data for each ticker
-    for ticker in tickers:
-        try:
-            stock_data = yf.download(ticker, period=lookback_period, interval='1d')
-            if not stock_data.empty:
-                # Calculate the percentage change in closing price from the previous day
-                percentage_change = (stock_data['Close'][0] - stock_data['Close'][1]) / stock_data['Close'][1] *  100
-                
-                # Check if the percentage change is more than  12%
-                if percentage_change >  30:
-                    print(f"{ticker} stock has fallen more than  12% in a day.")
-        except Exception as e:
-            print(f"Error fetching data for {ticker}: {e}")
-
-# Example usage
-top_1000_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "FB", "TSLA", "BRK.B", "JNJ", "V", "JPM"]  # Add all  1000 ticker symbols here
-monitor_stock_drop(top_1000_tickers)
-
+llm_api = PERPLEXITY_API
 
 def llm_inference(system_prompt, user_prompt):
-    pplx_key = PERPLEXITY_API
+    pplx_key = llm_api
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
         "model": "sonar-medium-chat",
@@ -99,6 +53,26 @@ def llm_inference(system_prompt, user_prompt):
     
     return answer
 
+def get_losers():
+    url = "https://finance.yahoo.com/losers"
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    assets = soup.find_all('a', attrs={"class":"Fw(600)"})
+    return assets
+
+def get_recommendation(company_name,book_value,market_value,probability_to_fix_problem_number):
+    float_number = float(probability_to_fix_problem_number)
+    # Convert to percentage
+    prob_float = float_number /  100
+    formula = (book_value-market_value) * prob_float
+    if formula > 0:
+        result = formula / book_value
+        result_string = f"Buy {company_name}, its premium / book value is {result}"
+        return True, result_string
+    else:
+        result = formula / book_value
+        result_string = f"DO NOT BUY {company_name}, its premium / book value is {result}"
+        return False, result_string
+
 # Fetch stock data from Yahoo Finance
 def get_stock_price(ticker,history=5):
     #time.sleep(4) #To avoid rate limit error
@@ -115,59 +89,41 @@ def get_stock_price(ticker,history=5):
     
     return df.to_string()
 
-def get_search_results(company_name):
+def why_price_dropped(company_name):
+    user_prompt = f"Why did {company_name} stock price dropped?"
     
-    query = f"{company_name} news"
+    pplx_key = llm_api
+    url = "https://api.perplexity.ai/chat/completions"
+    payload = {
+        "model": "sonar-medium-online",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "user",
+                "content": user_prompt
+            }
+        ]
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": "Bearer " + pplx_key
+    }
+    response = requests.post(url, json=payload, headers=headers)
     
-    try:
-        search_results = search(query, num=3, stop=3, pause=2)
-        top_links = list(search_results)
-        print(f"Search Urls: {top_links}")
-        return top_links
+    json_data = response.text
     
-    except Exception as e:
-        print(f"Googlesearch error: {e}")
-        url = "https://www.google.com/search?q=" + query
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        search_results = soup.find_all('div', class_='g')
-        top_links = []
-        for result in search_results[:3]:
-            link = result.find('a')
-            top_links.append(link['href'])
-        print(f"Search Urls: {top_links}")
-        return top_links    
+    # Parse the JSON data
+    parsed_json = json.loads(json_data)
 
-def scrape_webpage(url):
-    try:
-        page = requests.get(url)
-        soup = BeautifulSoup(page.content, 'html.parser')
-        text = ' '.join([p.get_text() for p in soup.find_all('p','<h1>', '<h2>','<span>')])
-        return text
-    except Exception as e:
-        print(f"Failed to scrape {url}: {e}")
-        return None
-
-def get_recent_stock_news(company_name):
-    top_links = get_search_results(company_name)
-    news=[]
-    for link in top_links:
-        text = scrape_webpage(link)
-        if text:
-            news.append(text)
+    # Access and print the "content"
+    answer = parsed_json["choices"][0]["message"]["content"]
     
-    news_string = '\n'.join(news)
-
-    top3_news=f"Recent News about {company_name}:\n"+news_string
+    print(answer)
     
-    print(top3_news)
-    
-    return top3_news
+    return answer
 
-# Fetch financial statements from Yahoo Finance
-
-def get_financial_statements(ticker):
+def get_3financial_statements(ticker):
     # To avoid rate limit error
     time.sleep(4)
     
@@ -199,8 +155,28 @@ def get_financial_statements(ticker):
     cash_flow_statement = cash_flow_statement.dropna(how="any")
     cash_flow_statement_str = cash_flow_statement.to_string()
     
-    # Return all three financial statements as strings
-    return balance_sheet_str, income_statement_str, cash_flow_statement_str
+    three_statements = f"""
+        Balance Sheet:\n{balance_sheet_str}\n
+        Income Statement:\n{income_statement_str}\n
+        Cash Flow Statement:\n{cash_flow_statement_str}\n
+        """
+    return three_statements
+
+# Fetch financial statements from Yahoo Finance
+def get_financial_statements(ticker):
+    # time.sleep(4) #To avoid rate limit error
+    if "." in ticker:
+        ticker=ticker.split(".")[0]
+    else:
+        ticker=ticker
+    ticker=ticker
+    company = yf.Ticker(ticker)
+    balance_sheet = company.balance_sheet
+    if balance_sheet.shape[1]>=3:
+        balance_sheet=balance_sheet.iloc[:,:3]    # Remove 4th years data
+    balance_sheet=balance_sheet.dropna(how="any")
+    balance_sheet = balance_sheet.to_string()
+    return balance_sheet
 
 def get_company_name(query):
     
@@ -223,76 +199,56 @@ def get_stock_ticker(company_name):
     company_ticker = data['quotes'][0]['symbol']
     return company_ticker
 
-def Anazlyze_stock(query):
+def Anazlyze_stock(query,percentage_drop):
     #agent.run(query) Outputs Company name, Ticker
     company_name = get_company_name(query)
     ticker=get_stock_ticker(company_name)
     print({"Query":query,"Company_name":company_name,"Ticker":ticker})
-    stock_data=get_stock_price(ticker,history=10)
-    balance_sheet_str, income_statement_str, cash_flow_statement_str = get_financial_statements(ticker)
-    financial_statements_str = f"""
-                Stock Balance Sheet: {balance_sheet_str}\n
-                Stock Income Statement:{income_statement_str}\n
-                Stock Cashflow Statement{cash_flow_statement_str}\n
-                """
-    book_value = ""
-    market_value = ""
-    stock_news=get_recent_stock_news(company_name)
-    
-    stock_drop_percentage = ""
-    
-    available_information=f"""
-    Financial Reports: {financial_statements_str}\n\n
-    Recent Stock News: {stock_news}\n\n
-    Stock Price history: {stock_data}\n\n
-    Company's Stock Price dropped by {stock_drop_percentage} today.
-    """
+    stock_price=get_stock_price(ticker,history=20)
+    stock_financials=get_financial_statements(ticker)
+    bad_news=why_price_dropped(company_name)
+    print(stock_price)
 
+    available_information=f"""
+            {company_name} Stock Price for the past 20 days: {stock_price}\n\n
+            {company_name} Financials: {stock_financials}\n\n
+            {company_name} stock price fell by {percentage_drop} due to {bad_news}."""
+    
     system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
             Give detailed stock analysis and use the available data and provide investment recommendation. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
-    user_prompt = f"""You are a risk manager and professional risk analyst. \
-            You have the following available information about {company_name}: \n{available_information}.\n
-            Question: Based on available information about {company_name}, what was the main reason the stock fell by {stock_drop_percentage} today? \
+    user_prompt = f"""You are a stock investment analysis expert. 
+            {company_name} stock has dropped by {percentage_drop} and you need to estimate the probability of the company being able to fix its problems.
+            Use and analyze this information about {company_name}:
+            {available_information}\n\n
+            Your answer must be only a number of percents and nothing more.
+            Examples: 34, 55, 74.
+            Question: What is the probability of the company to fix the reasons that dropped the price and recover its stock price?
             Answer:
             """
     
-    why_price_dropped = llm_inference(system_prompt, user_prompt)
+    book_value = "1000"
+    market_value = "1300"
     
-    system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
-            Give detailed stock analysis and use the available data and provide investment recommendation. \
-            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
+    probability_to_fix = llm_inference(system_prompt, user_prompt)
     
-    user_prompt = f"""You are a risk manager and professional risk analyst. \
-            You need to answer the probability question about the company's chances to fix their problem.
-            Give the answer strictly as the probabiliy to fix the problem in percentage. Examples: 12 percent, 47 percent, 88 percent.
-            You have the following available information about {company_name}: \n{available_information}.\n
-            Based on available information about {company_name}, we know the stock price dropped because {why_price_dropped}. \
-            Question: what is the percentage chace that the {company_name} will be able to fix the problem in the next year?
-            Answer in percentage:
-            """
-    
-    probability_to_fix_problem = llm_inference(system_prompt, user_prompt)
-    
-    probability_to_fix_problem_number = get_number(probability_to_fix_problem)
-    
-    recommendation = get_recommendation(company_name,book_value,market_value,probability_to_fix_problem_number)
-    
-    system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
-            Give detailed stock analysis and use the available data and provide investment recommendation. \
-            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
-    
-    user_prompt = f"""Give detailed stock analysis and use the available data to provide concrete investment recommendation in the binary form - invest or not to invest. \
-            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer \
-            You have the following information available about {company_name}: {available_information}. \n
-            Based on available information about {company_name}, we know the stock price dropped because {why_price_dropped}. \
-            Write 5-8 bullet points about investment analysis to answer user query, each bullet point should be whether a positive or negative factor for potential investment. 
-            At the end conclude with proper explaination and a certain decision (invest or don't invest) about this company's stock. \
-            Also answer how would recent Stock News affect the company and its perspectives. Try to asses how likely is it for the company to fix the problem.
-            During your analysis, a good rule of thumb that you should use when assessing the company is 'buy rumors and sell news', use that rule when analyzing the stock. 
-            """
-    
-    answer_analysis = llm_inference(system_prompt, user_prompt)
-    
-    return recommendation, answer_analysis
+    float_number = float(probability_to_fix)
+    # Convert to percentage
+    prob_float = float_number /  100
+    formula = (book_value-market_value) * prob_float
+    if formula > 0:
+        result = formula / book_value
+        result_string = f"Buy {company_name}, its premium / book value is {result}"
+        print(result)
+        print(result_string)
+        return True
+    else:
+        result = formula / book_value
+        result_string = f"DO NOT BUY {company_name}, its premium / book value is {result}"
+        print(result)
+        print(result_string)
+        return False
+
+losers = get_losers()
+print(losers)
