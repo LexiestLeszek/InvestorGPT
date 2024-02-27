@@ -1,4 +1,4 @@
-# StockBot 📈
+# InvestorBot 📈
 
 A LangChain and LLM-based agent designed to assist with stock investment by utilizing real-time and historical financial data. As a retail investor without a finance background, understanding complex financial terms can be challenging and time-consuming. To address this issue, we have developed an AI bot that leverages LLM technology to provide investment analysis.
 
