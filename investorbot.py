@@ -5,8 +5,6 @@ import time
 from bs4 import BeautifulSoup
 import re
 import requests
-from googlesearch import search
-import translators as ts
 import json
 import yfinance as yf
 import warnings
@@ -89,7 +87,7 @@ def get_stock_price(ticker,history=5):
     return df.to_string()
 
 def why_price_dropped(company_name):
-    user_prompt = f"Why did {company_name} stock price dropped?"
+    user_prompt = f"Why did {company_name} stock price dropped today?"
     
     pplx_key = llm_api
     url = "https://api.perplexity.ai/chat/completions"
@@ -254,7 +252,7 @@ def Anazlyze_stock(ticker,percentage_drop):
             Answer in percentage:
             """
     
-    print("##########################################\n\n")
+    print("##########################################\n")
     
     book_value = 2500 # TODO: add logic (yfinance)
     market_value = 1805 # TODO: add logic (yfinance)
@@ -305,11 +303,20 @@ def main():
         
             #ticker = "MSFT"
             #percentage_drop = "0.39"
-            rec = Anazlyze_stock(ticker,percentage_drop)
+            print(ticker)
+            
+            percent_drop_stripped = percentage_drop.replace("-", "").replace("%", "")
+            print(percent_drop_stripped)
+            
+            
+            rec = Anazlyze_stock(ticker,percent_drop_stripped)
             print(f"Recommendation is: {rec}")
-            print("##########################################\n\n")
+            print("\n##########################################\n\n")
 
         time.sleep(3600)
+
+if __name__ == "__main__":
+    main()
 
 #TODO
 # 1. Add getting Book Value
