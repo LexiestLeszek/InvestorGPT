@@ -222,20 +222,8 @@ def get_company_name(ticker):
     
     return company_name
 
-def get_stock_ticker(company_name):
-    yfinance = "https://query2.finance.yahoo.com/v1/finance/search"
-    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
-    params = {"q": company_name, "quotes_count": 1, "country": "United States"}
-
-    res = requests.get(url=yfinance, params=params, headers={'User-Agent': user_agent})
-    data = res.json()
-
-    company_ticker = data['quotes'][0]['symbol']
-    return company_ticker
-
 def Anazlyze_stock(ticker,percentage_drop):
     company_name = get_company_name(ticker)
-    ticker=get_stock_ticker(company_name)
     stock_price=get_stock_price(ticker,history=20)
     stock_financials=get_3financial_statements(ticker)
     bad_news=why_price_dropped(company_name,percentage_drop)
@@ -324,7 +312,8 @@ def main():
             print(f"Recommendation is: {rec}")
             print("\n##########################################\n\n")
 
-        #time.sleep(3600)
+        print("---!Finished checking losers tickets!---")
+        time.sleep(3600)
 
 if __name__ == "__main__":
     main()
