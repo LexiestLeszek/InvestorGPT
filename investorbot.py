@@ -10,10 +10,25 @@ import yfinance as yf
 import warnings
 warnings.filterwarnings("ignore")
 
-llm_api = PERPLEXITY_API
+def api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,recommendation):
+    
+    data = {
+    "company_name": company_name,
+    "book_value": book_value,
+    "market_value": market_value,
+    "net_value": net_value,
+    "prob_to_fix": prob_int,
+    "roi": roi,
+    "available_info": available_information,
+    "buy_or_not": recommendation
+}
+
+    json_data = json.dumps(data)
+
+    return json_data
 
 def llm_inference(system_prompt, user_prompt):
-    pplx_key = llm_api
+    pplx_key = PERPLEXITY_API
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
         "model": "sonar-medium-chat",
@@ -96,7 +111,7 @@ def why_price_dropped(company_name,percentage_drop):
     
     user_prompt = f"Why did {company_name} stock price dropped by {percentage_drop} in {current_month} {current_year}?"
     
-    pplx_key = llm_api
+    pplx_key = PERPLEXITY_API
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
         "model": "sonar-medium-online",
@@ -191,7 +206,7 @@ def get_company_name(ticker):
     user_prompt = f"""
         What is the company name that has {ticker} stock ticker? Answer only with the company name and nothing else."""
     
-    pplx_key = llm_api
+    pplx_key = PERPLEXITY_API
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
         "model": "sonar-medium-online",
@@ -286,9 +301,15 @@ def Anazlyze_stock(ticker,percentage_drop):
     
     if formula > 0:
         print("**Buy ",company_name)
+        rec = True
+        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
+        #return result
         return True
     else:
         print("**DO NOT BUY ",company_name)
+        rec = False
+        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
+        #return result
         return False
 
 
