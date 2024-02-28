@@ -2,6 +2,9 @@
 
 InvestorBot is a FastAPI-based application designed to provide investment analysis and recommendations for stocks experiencing significant drops in value. The application leverages data from Yahoo Finance, financial statements, and uses AI-driven inference to assess the likelihood of a company's recovery and provide investment recommendations.
 
+The script analyzes stocks that have experienced significant drops in value within a specified period (e.g., during the week). It fetches financial statements for each of these stocks, utilizes a language model to analyze the data, calculates financial metrics, and collects news about the companies to understand why their shares fell. Based on this comprehensive analysis, which includes assessing the financial indicators and the impact of news on the stock prices, the script calculates the probability of the company to fix its problems (that became the reason for the stock price to drop) and then calculates and provides recommendation whether it's worth investing in these companies or not. 
+This process involves evaluating the company's financial health, recent news, and potential for recovery, ultimately providing allround investment recommendation.
+
 ## Features
 
 - **API Integration**: Utilizes Perplexity AI for natural language processing to generate human-like responses and investment recommendations.
