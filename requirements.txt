@@ -1,5 +1,5 @@
-langchain==0.0.227
-streamlit
-openai
-bs4
-yfinance
+beautifulsoup4==4.11.1
+fastapi==0.110.0
+Requests==2.31.0
+uvicorn==0.27.1
+yfinance==0.2.28
