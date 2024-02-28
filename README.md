@@ -27,7 +27,7 @@ InvestorBot is a FastAPI-based application designed to provide investment analys
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/investorbot.git
+git clone https://github.com/LexiestLeszek/investorbot.git
 cd investorbot
 ```
 
