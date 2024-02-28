@@ -1,5 +1,4 @@
 PERPLEXITY_API = ""
-PERPLEXITY_API = "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"
 
 import json
 import time
