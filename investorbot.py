@@ -302,25 +302,24 @@ def Anazlyze_stock(ticker,percentage_drop):
     if formula > 0:
         print("**Buy ",company_name)
         rec = True
-        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
-        #return result
-        return True
+        result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
+        return result
+        #return True
     else:
         print("**DO NOT BUY ",company_name)
         rec = False
-        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
-        #return result
-        return False
+        result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
+        return result
+        #return False
 
 
-def main():
-    while True:
-        losers_data = get_losers()
+def main_foo():
+    losers_data = get_losers()
 
-        # Print the extracted data
-        for ticker, percentage_drop in losers_data:
-            
-            #if percentage_drop > 10:
+    # Print the extracted data
+    for ticker, percentage_drop in losers_data:
+        
+        if percentage_drop > 10:
             #print(f"{ticker}: {percentage_drop}")
         
             #ticker = "MSFT"
@@ -331,12 +330,11 @@ def main():
             rec = Anazlyze_stock(ticker,percentage_drop)
             print(f"Recommendation is: {rec}")
             print("\n##########################################\n\n")
-
-        print("---!Finished checking losers tickets!---")
-        time.sleep(3600)
+            return rec
+    return None
 
 if __name__ == "__main__":
-    main()
+    main_foo()
 
 #TODO
 # 1. Add getting Book Value
