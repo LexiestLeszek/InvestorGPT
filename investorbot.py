@@ -328,7 +328,6 @@ def main():
             print(ticker)
             print(percentage_drop)
             
-            
             rec = Anazlyze_stock(ticker,percentage_drop)
             print(f"Recommendation is: {rec}")
             print("\n##########################################\n\n")
