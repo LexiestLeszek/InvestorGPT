@@ -51,10 +51,26 @@ def llm_inference(system_prompt, user_prompt):
     return answer
 
 def get_losers():
+    # Step 1: Fetch the HTML content
     url = "https://finance.yahoo.com/losers"
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    assets = soup.find_all('a', attrs={"class":"Fw(600)"})
-    return assets
+    response = requests.get(url)
+
+    # Step 2: Parse the HTML content
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Step 3: Extract the table containing the stock information
+    # Assuming the table has a specific class or id, adjust the selector accordingly
+    table = soup.find('table', {'class': 'W(100%)'})
+
+    # Step 4: Extract tickers and percentage drop
+    data = []
+    for row in table.find_all('tr')[1:]: # Skip the header row
+        cells = row.find_all('td')
+        ticker = cells[0].text.strip()
+        percentage_drop = cells[4].text.strip()
+        data.append((ticker, percentage_drop))
+        
+        return data
 
 # Fetch stock data from Yahoo Finance
 def get_stock_price(ticker,history=5):
@@ -278,14 +294,23 @@ def Anazlyze_stock(ticker,percentage_drop):
         print("**DO NOT BUY ",company_name)
         return False
 
-ticker = "MSFT"
-percentage_drop = "0.39"
-rec = Anazlyze_stock(ticker,percentage_drop)
-print(f"Recommendation is: {rec}")
-print("##########################################\n\n")
+
+def main():
+    while True:
+        losers_data = get_losers()
+
+        # Print the extracted data
+        for ticker, percentage_drop in losers_data:
+            #print(f"{ticker}: {percentage_drop}")
+        
+            #ticker = "MSFT"
+            #percentage_drop = "0.39"
+            rec = Anazlyze_stock(ticker,percentage_drop)
+            print(f"Recommendation is: {rec}")
+            print("##########################################\n\n")
+
+        time.sleep(3600)
 
 #TODO
 # 1. Add getting Book Value
 # 2. Add getting Market Value
-# 3. Add monitoring today's (this week's) loosers and returning ticket and percentage drop
-# 4. 
