@@ -69,7 +69,7 @@ def get_losers():
         percentage_drop = float(percentage_drop.replace("-", "").replace("%", ""))
         data.append((ticker, percentage_drop))
         
-        return data
+    return data
 
 # Fetch stock data from Yahoo Finance
 def get_stock_price(ticker,history=5):
@@ -87,8 +87,14 @@ def get_stock_price(ticker,history=5):
     
     return df.to_string()
 
-def why_price_dropped(company_name):
-    user_prompt = f"Why did {company_name} stock price dropped today?"
+def why_price_dropped(company_name,percentage_drop):
+    
+    from datetime import datetime
+
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    user_prompt = f"Why did {company_name} stock price dropped by {percentage_drop} in {current_month} {current_year}?"
     
     pplx_key = llm_api
     url = "https://api.perplexity.ai/chat/completions"
@@ -97,8 +103,12 @@ def why_price_dropped(company_name):
         "temperature": 0,
         "messages": [
             {
-                "role": "user",
-                "content": user_prompt
+            "role": "system",
+            "content": "Be precise and concise."
+            },
+            {
+            "role": "user",
+            "content": user_prompt
             }
         ]
     }
@@ -117,7 +127,7 @@ def why_price_dropped(company_name):
     # Access and print the "content"
     answer = parsed_json["choices"][0]["message"]["content"]
     
-    print(answer)
+    print(f"Price of {company_name} dropped because: \n{answer}")
     
     return answer
 
@@ -228,7 +238,7 @@ def Anazlyze_stock(ticker,percentage_drop):
     ticker=get_stock_ticker(company_name)
     stock_price=get_stock_price(ticker,history=20)
     stock_financials=get_3financial_statements(ticker)
-    bad_news=why_price_dropped(company_name)
+    bad_news=why_price_dropped(company_name,percentage_drop)
 
     available_information=f"""
             {company_name} Stock Price dynamic for the past 30 days: {stock_price}\n\n
@@ -301,20 +311,20 @@ def main():
         # Print the extracted data
         for ticker, percentage_drop in losers_data:
             
-            if percentage_drop > 10:
-                #print(f"{ticker}: {percentage_drop}")
+            #if percentage_drop > 10:
+            #print(f"{ticker}: {percentage_drop}")
+        
+            #ticker = "MSFT"
+            #percentage_drop = "0.39"
+            print(ticker)
+            print(percentage_drop)
             
-                #ticker = "MSFT"
-                #percentage_drop = "0.39"
-                print(ticker)
-                print(percentage_drop)
-                
-                
-                rec = Anazlyze_stock(ticker,percentage_drop)
-                print(f"Recommendation is: {rec}")
-                print("\n##########################################\n\n")
+            
+            rec = Anazlyze_stock(ticker,percentage_drop)
+            print(f"Recommendation is: {rec}")
+            print("\n##########################################\n\n")
 
-        time.sleep(3600)
+        #time.sleep(3600)
 
 if __name__ == "__main__":
     main()
