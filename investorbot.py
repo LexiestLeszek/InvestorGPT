@@ -1,4 +1,5 @@
 PERPLEXITY_API = ""
+PERPLEXITY_API = "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"
 
 import json
 import time
@@ -66,6 +67,7 @@ def get_losers():
         cells = row.find_all('td')
         ticker = cells[0].text.strip()
         percentage_drop = cells[4].text.strip()
+        percentage_drop = float(percentage_drop.replace("-", "").replace("%", ""))
         data.append((ticker, percentage_drop))
         
         return data
@@ -299,19 +301,19 @@ def main():
 
         # Print the extracted data
         for ticker, percentage_drop in losers_data:
-            #print(f"{ticker}: {percentage_drop}")
-        
-            #ticker = "MSFT"
-            #percentage_drop = "0.39"
-            print(ticker)
             
-            percent_drop_stripped = percentage_drop.replace("-", "").replace("%", "")
-            print(percent_drop_stripped)
+            if percentage_drop > 10:
+                #print(f"{ticker}: {percentage_drop}")
             
-            
-            rec = Anazlyze_stock(ticker,percent_drop_stripped)
-            print(f"Recommendation is: {rec}")
-            print("\n##########################################\n\n")
+                #ticker = "MSFT"
+                #percentage_drop = "0.39"
+                print(ticker)
+                print(percentage_drop)
+                
+                
+                rec = Anazlyze_stock(ticker,percentage_drop)
+                print(f"Recommendation is: {rec}")
+                print("\n##########################################\n\n")
 
         time.sleep(3600)
 
