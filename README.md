@@ -72,10 +72,6 @@ A JSON response containing the investment analysis and recommendation for the an
 - `why_price_dropped(company_name, percentage_drop)`: Uses Perplexity AI to determine the reasons behind a stock price drop.
 - `Anazlyze_stock(ticker, percentage_drop)`: Analyzes a stock, generates investment recommendations, and returns a JSON object with the analysis results.
 
-## Contributing
-
-Contributions are welcome! Please read the [Contribution Guidelines](CONTRIBUTING.md) before submitting any pull requests.
-
 ## Future Enhancements
 
 - **Book Value and Market Value Fetching**: Implement logic to fetch the book value and market value of companies for a more comprehensive analysis.
