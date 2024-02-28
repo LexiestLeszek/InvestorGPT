@@ -10,9 +10,6 @@ import translators as ts
 import json
 import yfinance as yf
 import warnings
-import argostranslate.package
-import argostranslate.translate
-import os
 warnings.filterwarnings("ignore")
 
 llm_api = PERPLEXITY_API
@@ -291,3 +288,4 @@ print("##########################################\n\n")
 # 1. Add getting Book Value
 # 2. Add getting Market Value
 # 3. Add monitoring today's (this week's) loosers and returning ticket and percentage drop
+# 4. 
