@@ -19,18 +19,22 @@ def goog_query_str(company_name):
     today = date.today()
     yesterday = today - timedelta(days=1)
     yesterday = yesterday.strftime('%Y-%m-%d')
+    query = f"{company_name} stock fell after:{yesterday}"
+    print(query)
     try:
-        query = f"{company_name} stock fell after:{yesterday}"
-        #print(query)
-        search_results = search(query, num=2)
+        search_results = search(query,num_results=5,advanced=True)
+        top_links = []
+        for sr in search_results:
+            if f"{company_name}" in sr.title or f"{company_name}" in sr.description:
+                top_links.append(sr.url)
         top_links = list(search_results)
         #print(top_links)
     except Exception as e:
-        print(f"Wiki/Reddit/Yandex/OtvetMail failed: {e}")
-        top_links = list("")
+        print(f"Google1 failed: {e}")
+        
     scraped_texts = []
     for link in top_links:
-        #print(link)
+        print(link)
         try:
             page = requests.get(link)
             soup = BeautifulSoup(page.content, 'html.parser')
@@ -65,14 +69,10 @@ def get_company_name(ticker):
     response = requests.post(url, json=payload, headers=headers)
     
     json_data = response.text
-    
-    # Parse the JSON data
     parsed_json = json.loads(json_data)
-
-    # Access and print the "content"
     company_name = parsed_json["choices"][0]["message"]["content"]
     
-    #print(company_name)
+    print(company_name)
     
     return company_name
 
@@ -206,7 +206,7 @@ def get_stock_numeric_rating(ticker, csv_file_name):
     df = pd.read_csv(csv_file_name)
     
     # Filter the DataFrame to find the row with the given ticker
-    filtered_df = df[df['Еickers'] == ticker]
+    filtered_df = df[df['Ticker'] == ticker]
     
     # Extract the "Overall Rating" value for the given ticker
     # Assuming there's only one row for each ticker, and it's the first column
@@ -223,18 +223,30 @@ def get_stock_numeric_rating(ticker, csv_file_name):
 def get_stock_txt_rating(company_name):    
     # Uses Embeddings + LLMs to ask ~20 questions to company's 10-Ks and 10-Qs and assess its overall health
     
-    prompt = f"Provide a financial analysis of {company_name} and explain it overall financial health"
+    prompt = f"What is overall financial health of {company_name}?"
     
-    answer = llm_call(prompt)
+    url = "https://api.perplexity.ai/chat/completions"
+    payload = {
+        "model": "sonar-medium-online",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": "Bearer " + PERPLEXITY_API
+    }
+    response = requests.post(url, json=payload, headers=headers)
     
+    json_data = response.text
+    parsed_json = json.loads(json_data)
+    answer = parsed_json["choices"][0]["message"]["content"]
     return answer
-    
-    '''
-    questions = ""
-
-    for q in questions:
-        q = ""
-    '''
 
 ################################################################################################
 # Full Step 5: Estimate a chance for a stock to fix the problem 
@@ -252,8 +264,10 @@ def chance_to_recover(company_name,ticker):
     why_fell = why_stock_fell(ticker)
         
     stock_n_rating = get_stock_numeric_rating(ticker, "StockRatings.csv")
+    print(f"{company_name} Overall Financial score: {stock_n_rating}")
     
     stock_txt_rating = get_stock_txt_rating(company_name)
+    print(f"{company_name} Overall Financial health: {stock_txt_rating}")
     
     prompt = f"""You are the greatest and most competent financial analyst that can understand and predict company's future.
         Read this context about the company:\n
@@ -265,6 +279,7 @@ def chance_to_recover(company_name,ticker):
         """
     
     result = llm_call(prompt)
+    print(f"{company_name} chances to recover stock price: {result}")
     
     return result
 
@@ -290,16 +305,21 @@ def main():
         company_name = get_company_name(ticker)
         print(company_name)
         
+        print(ticker)
+        print(percentage_drop)
         answer = chance_to_recover(company_name,ticker)
         
         book_value = get_book_value(ticker)
         
         market_cap = get_market_cap(ticker)
         
+        print("\n")
         print(f"{company_name} chacnes to recover: ", answer)
         print(f"{company_name} Book value is {book_value}")
         print(f"{company_name} Market Cap is {market_cap}")
         print(f"{company_name} Net value is {book_value - market_cap}")
+
         
 if __name__ == "__main__":
-    main
+    main()
+
