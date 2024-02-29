@@ -1,5 +1,17 @@
 beautifulsoup4==4.11.1
+chromadb==0.4.22
 fastapi==0.110.0
+googlesearch_python==1.2.3
+langchain==0.1.9
+llama_index==0.10.14
+matplotlib==3.8.2
+numpy==1.26.4
+openai==0.27.7
+pandas==2.2.1
+python-dotenv==1.0.1
 Requests==2.31.0
+scipy==1.12.0
+seaborn==0.13.2
+tqdm==4.66.1
 uvicorn==0.27.1
 yfinance==0.2.28
