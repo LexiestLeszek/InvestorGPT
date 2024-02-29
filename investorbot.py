@@ -5,7 +5,6 @@ import time
 from bs4 import BeautifulSoup
 import re
 import requests
-import json
 import yfinance as yf
 import warnings
 warnings.filterwarnings("ignore")
@@ -26,6 +25,33 @@ def api_return(company_name,book_value,market_value,net_value,prob_int,roi,avail
     json_data = json.dumps(data)
 
     return json_data
+
+def get_book_value(ticker):
+    if "." in ticker:
+        ticker = ticker.split(".")[0]
+    company = yf.Ticker(ticker)
+    balance_sheet = company.balance_sheet
+    # getting book value
+    balance_sheet = balance_sheet.dropna(how="any")
+    balance_sheet = balance_sheet.iloc[:, :1] 
+    total_assets = balance_sheet.loc["Total Assets"][0]
+    total_liabilities = balance_sheet.loc["Total Liabilities Net Minority Interest"][0]
+    #print("Total Assets in dollars: ",total_assets)
+    #print("Total Liabilities Net Minority Interest in dollars: ",total_liabilities)
+    book_value = total_assets - total_liabilities
+    return book_value
+
+def get_market_cap(ticker):
+    if "." in ticker:
+        ticker = ticker.split(".")[0]
+    company = yf.Ticker(ticker)
+    balance_sheet = company.balance_sheet
+    # getting book value
+    balance_sheet = balance_sheet.dropna(how="any")
+    balance_sheet = balance_sheet.iloc[:, :1] 
+    market_cap = balance_sheet.loc["Total Capitalization"][0]
+    #print("Total Capitalization in dollars as of latest balance sheet: ",market_cap)
+    return market_cap
 
 def llm_inference(system_prompt, user_prompt):
     pplx_key = PERPLEXITY_API
@@ -186,7 +212,7 @@ def get_3financial_statements(ticker):
     return three_statements
 
 # Fetch financial statements from Yahoo Finance
-def get_financial_statements(ticker):
+def get_balance_sheet(ticker):
     # time.sleep(4) #To avoid rate limit error
     if "." in ticker:
         ticker=ticker.split(".")[0]
@@ -268,8 +294,8 @@ def Anazlyze_stock(ticker,percentage_drop):
     
     print("##########################################\n")
     
-    book_value = 2500 # TODO: add logic (yfinance)
-    market_value = 1805 # TODO: add logic (yfinance)
+    book_value = get_book_value(ticker)
+    market_value = get_market_cap(ticker) # TODO: add the most recent market cap (not from balance sheet)
     
     probability_to_fix = llm_inference(system_prompt, user_prompt)
     
@@ -302,24 +328,28 @@ def Anazlyze_stock(ticker,percentage_drop):
     if formula > 0:
         print("**Buy ",company_name)
         rec = True
-        result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
-        return result
-        #return True
+        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
+        #return result
+        return True
     else:
         print("**DO NOT BUY ",company_name)
         rec = False
-        result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
-        return result
-        #return False
+        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
+        #return result
+        return False
 
 
 def main_foo():
     losers_data = get_losers()
 
+    sorted_losers_data = sorted(losers_data, key=lambda x: x[1], reverse=True)
+    
+    top_3_losers = sorted_losers_data[:1]
+    
     # Print the extracted data
-    for ticker, percentage_drop in losers_data:
+    for ticker, percentage_drop in top_3_losers:
         
-        if percentage_drop > 10:
+        if percentage_drop > 15:
             #print(f"{ticker}: {percentage_drop}")
         
             #ticker = "MSFT"
@@ -330,7 +360,9 @@ def main_foo():
             rec = Anazlyze_stock(ticker,percentage_drop)
             print(f"Recommendation is: {rec}")
             print("\n##########################################\n\n")
-            return rec
+            #return rec
+        else:
+            print("No loser tickers today!")
     return None
 
 if __name__ == "__main__":
