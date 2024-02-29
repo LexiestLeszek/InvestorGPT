@@ -8,7 +8,7 @@ import re
 import requests
 import yfinance as yf
 from datetime import date, timedelta
-from stockgrader import *
+#from stockgrader import *
 import pandas as pd
 
 
@@ -21,16 +21,16 @@ def goog_query_str(company_name):
     yesterday = yesterday.strftime('%Y-%m-%d')
     try:
         query = f"{company_name} stock fell after:{yesterday}"
-        print(query)
+        #print(query)
         search_results = search(query, num=2)
         top_links = list(search_results)
-        print(top_links)
+        #print(top_links)
     except Exception as e:
         print(f"Wiki/Reddit/Yandex/OtvetMail failed: {e}")
         top_links = list("")
     scraped_texts = []
     for link in top_links:
-        print(link)
+        #print(link)
         try:
             page = requests.get(link)
             soup = BeautifulSoup(page.content, 'html.parser')
@@ -72,7 +72,7 @@ def get_company_name(ticker):
     # Access and print the "content"
     company_name = parsed_json["choices"][0]["message"]["content"]
     
-    print(company_name)
+    #print(company_name)
     
     return company_name
 
@@ -219,14 +219,22 @@ def get_stock_numeric_rating(ticker, csv_file_name):
 # csv_file_name = 'stock_ratings.csv'
 # print(get_overall_rating(ticker, csv_file_name))
 
-def get_stock_txt_rating(ten_k,ten_q):
-    
+#def get_stock_txt_rating(ten_k,ten_q):
+def get_stock_txt_rating(company_name):    
     # Uses Embeddings + LLMs to ask ~20 questions to company's 10-Ks and 10-Qs and assess its overall health
     
+    prompt = f"Provide a financial analysis of {company_name} and explain it overall financial health"
+    
+    answer = llm_call(prompt)
+    
+    return answer
+    
+    '''
     questions = ""
 
     for q in questions:
         q = ""
+    '''
 
 ################################################################################################
 # Full Step 5: Estimate a chance for a stock to fix the problem 
@@ -245,7 +253,7 @@ def chance_to_recover(company_name,ticker):
         
     stock_n_rating = get_stock_numeric_rating(ticker, "StockRatings.csv")
     
-    stock_txt_rating = get_stock_txt_rating(ticker, "StockRatings.csv")
+    stock_txt_rating = get_stock_txt_rating(company_name)
     
     prompt = f"""You are the greatest and most competent financial analyst that can understand and predict company's future.
         Read this context about the company:\n
@@ -270,6 +278,7 @@ def chance_to_recover(company_name,ticker):
 def main():
     
     losers_data = get_losers()
+    print("losers gathered")
 
     sorted_losers_data = sorted(losers_data, key=lambda x: x[1], reverse=True)
     
@@ -279,6 +288,7 @@ def main():
     for ticker, percentage_drop in top_3_losers:
         
         company_name = get_company_name(ticker)
+        print(company_name)
         
         answer = chance_to_recover(company_name,ticker)
         
@@ -291,22 +301,5 @@ def main():
         print(f"{company_name} Market Cap is {market_cap}")
         print(f"{company_name} Net value is {book_value - market_cap}")
         
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    main
