@@ -281,11 +281,11 @@ def Anazlyze_stock(ticker,percentage_drop):
             Give detailed stock analysis and use the available data and provide investment recommendation. \
             The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
     
-    user_prompt = f"""You are a stock investment analysis expert. 
+    user_prompt = f"""You are the best risk analysis expert in the world. 
             {company_name} stock has dropped by {percentage_drop} and you need to estimate the probability of the company being able to fix its problems.
             Use and analyze this information about {company_name}:
             {available_information}\n\n
-            Give your precise percentage estimation of how likely will the company successfully fix its problems to return stock price back to all time high.
+            Based on all the informtaion you have, give your precise percentage estimation of how likely will the company successfully fix its problems to return stock price back to all time high.
             Your answer must be only a number of percents and nothing more.
             Examples of acceptable answers: 34%, 55%, 74%.
             Question: What is the probability of the company to fix the reasons that dropped the price and recover its stock price?
@@ -344,26 +344,23 @@ def main_foo():
 
     sorted_losers_data = sorted(losers_data, key=lambda x: x[1], reverse=True)
     
-    top_3_losers = sorted_losers_data[:1]
+    top_3_losers = sorted_losers_data[:3]
     
     # Print the extracted data
     for ticker, percentage_drop in top_3_losers:
         
-        if percentage_drop > 15:
-            #print(f"{ticker}: {percentage_drop}")
+        #print(f"{ticker}: {percentage_drop}")
+    
+        #ticker = "MSFT"
+        #percentage_drop = "0.39"
+        print(ticker)
+        print(percentage_drop)
         
-            #ticker = "MSFT"
-            #percentage_drop = "0.39"
-            print(ticker)
-            print(percentage_drop)
-            
-            rec = Anazlyze_stock(ticker,percentage_drop)
-            print(f"Recommendation is: {rec}")
-            print("\n##########################################\n\n")
-            #return rec
-        else:
-            print("No loser tickers today!")
-    return None
+        rec = Anazlyze_stock(ticker,percentage_drop)
+        print(f"Recommendation is: {rec}")
+        print("\n##########################################\n\n")
+        #return rec
+    
 
 if __name__ == "__main__":
     main_foo()
