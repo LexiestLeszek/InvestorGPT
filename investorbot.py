@@ -2,29 +2,177 @@ PERPLEXITY_API = ""
 
 import json
 import time
+from googlesearch import search
 from bs4 import BeautifulSoup
 import re
 import requests
 import yfinance as yf
-import warnings
-warnings.filterwarnings("ignore")
+from datetime import date, timedelta
+from stockgrader import *
+import pandas as pd
 
-def api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,recommendation):
+
+################################################################################################
+# Helper funcs
+################################################################################################
+def goog_query_str(company_name):
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    yesterday = yesterday.strftime('%Y-%m-%d')
+    try:
+        query = f"{company_name} stock fell after:{yesterday}"
+        print(query)
+        search_results = search(query, num=2)
+        top_links = list(search_results)
+        print(top_links)
+    except Exception as e:
+        print(f"Wiki/Reddit/Yandex/OtvetMail failed: {e}")
+        top_links = list("")
+    scraped_texts = []
+    for link in top_links:
+        print(link)
+        try:
+            page = requests.get(link)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            text = ' '.join([p.get_text() for p in soup.find_all('p')])
+        except Exception as e:
+            print(f"Failed to scrape the link: {link}\nError: {e}")
+        scraped_texts.append(text)
+
+    all_scraped_text = '.\n'.join(scraped_texts)
     
-    data = {
-    "company_name": company_name,
-    "book_value": book_value,
-    "market_value": market_value,
-    "net_value": net_value,
-    "prob_to_fix": prob_int,
-    "roi": roi,
-    "available_info": available_information,
-    "buy_or_not": recommendation
-}
+    return all_scraped_text
 
-    json_data = json.dumps(data)
+def get_company_name(ticker):
 
-    return json_data
+    user_prompt = f"""What is the company name that has {ticker} stock ticker? Answer only with the company name and nothing else."""
+    url = "https://api.perplexity.ai/chat/completions"
+    payload = {
+        "model": "sonar-medium-online",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "user",
+                "content": user_prompt
+            }
+        ]
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": "Bearer " + PERPLEXITY_API
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    
+    json_data = response.text
+    
+    # Parse the JSON data
+    parsed_json = json.loads(json_data)
+
+    # Access and print the "content"
+    company_name = parsed_json["choices"][0]["message"]["content"]
+    
+    print(company_name)
+    
+    return company_name
+
+def llm_call(prompt):
+    url = "https://api.perplexity.ai/chat/completions"
+    payload = {
+        "model": "sonar-medium-chat",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "system",
+                "content": "Be precise and concise."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": "Bearer " + PERPLEXITY_API
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    json_data = response.text
+    parsed_json = json.loads(json_data)
+    answer = parsed_json["choices"][0]["message"]["content"]
+    
+    return answer
+
+################################################################################################
+# Full Step 1 is this func: get losers ticker and percentage drop
+################################################################################################
+def get_losers():
+    try:
+        url = "https://finance.yahoo.com/losers"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        table = soup.find('table', {'class': 'W(100%)'})
+        data = []
+        for row in table.find_all('tr')[1:]: 
+            cells = row.find_all('td')
+            ticker = cells[0].text.strip()
+            percentage_drop = cells[4].text.strip()
+            percentage_drop = float(percentage_drop.replace("-", "").replace("%", ""))
+            data.append((ticker, percentage_drop))
+            return data
+    except Exception as e:
+        url = "https://stockanalysis.com/markets/losers/"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        table = soup.find('table', {'class': 'main-table'})
+        data = []
+        for row in table.find_all('tr')[1:]: 
+            cells = row.find_all('td')
+            ticker = cells[1].text.strip()
+            percentage_drop = cells[3].text.strip()
+            percentage_drop = float(percentage_drop.replace("-", "").replace("%", ""))
+            data.append((ticker, percentage_drop))
+            #data.append(ticker)
+            return data
+        
+    
+################################################################################################
+# Full Step 2 is this func: get top 2 google results for "{ticker} stock fell"
+################################################################################################
+
+def why_stock_fell(company_name):
+    
+    context = goog_query_str(company_name)
+    
+    prompt = f"""You are a great financial analyst that takes company news and can interpret how they affect company stocks.
+            Read these news carefully:\n
+            {context}\n
+            Question: Why did company's stock fell? Answer with as many financial details as possible, but keep the answer short.
+            Answer: 
+            """
+    
+    answer = llm_call(prompt)
+    
+    return answer
+
+################################################################################################
+# Full Step 3: Get 10k and 10q reports and vectorize them (rag pipeline)
+################################################################################################
+
+# Download 10-Ks and 10-Qs
+# Vectorize them
+# Ask 20+ questions to them using semantic search + LLM
+# summarize the answer into coherent and not so long text
+
+
+################################################################################################
+# Full Step 4: Analyze fundamentals
+################################################################################################
+
+# Use some kind of a tool to download and analyze 3 Financial Reports
+# Get their main metrics and ratios
+# Compare them to competitors
 
 def get_book_value(ticker):
     if "." in ticker:
@@ -53,293 +201,74 @@ def get_market_cap(ticker):
     #print("Total Capitalization in dollars as of latest balance sheet: ",market_cap)
     return market_cap
 
-def llm_inference(system_prompt, user_prompt):
-    pplx_key = PERPLEXITY_API
-    url = "https://api.perplexity.ai/chat/completions"
-    payload = {
-        "model": "sonar-medium-chat",
-        "temperature": 0,
-        "messages": [
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": user_prompt
-            }
-        ]
-    }
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "Authorization": "Bearer " + pplx_key
-    }
-    response = requests.post(url, json=payload, headers=headers)
+def get_stock_numeric_rating(ticker, csv_file_name):
+    # Read the CSV file into a DataFrame
+    df = pd.read_csv(csv_file_name)
     
-    json_data = response.text
+    # Filter the DataFrame to find the row with the given ticker
+    filtered_df = df[df['Еickers'] == ticker]
     
-    # Parse the JSON data
-    parsed_json = json.loads(json_data)
-
-    # Access and print the "content"
-    answer = parsed_json["choices"][0]["message"]["content"]
+    # Extract the "Overall Rating" value for the given ticker
+    # Assuming there's only one row for each ticker, and it's the first column
+    overall_rating = filtered_df.iloc[0]['Overall Rating']
     
-    print(answer)
+    return overall_rating
+
+# Example usage:
+# ticker = 'AAPL'
+# csv_file_name = 'stock_ratings.csv'
+# print(get_overall_rating(ticker, csv_file_name))
+
+def get_stock_txt_rating(ten_k,ten_q):
     
-    return answer
+    # Uses Embeddings + LLMs to ask ~20 questions to company's 10-Ks and 10-Qs and assess its overall health
+    
+    questions = ""
 
-def get_losers():
-    # Step 1: Fetch the HTML content
-    url = "https://finance.yahoo.com/losers"
-    response = requests.get(url)
+    for q in questions:
+        q = ""
 
-    # Step 2: Parse the HTML content
-    soup = BeautifulSoup(response.text, 'html.parser')
+################################################################################################
+# Full Step 5: Estimate a chance for a stock to fix the problem 
+################################################################################################
 
-    # Step 3: Extract the table containing the stock information
-    # Assuming the table has a specific class or id, adjust the selector accordingly
-    table = soup.find('table', {'class': 'W(100%)'})
+# using monte carlo simulation 
+#   based on the stock fundamentals
+#   reasons why stock fell
+#   company's unique advantages
+#   company's health compared to competitotrs
+#   general market trends
 
-    # Step 4: Extract tickers and percentage drop
-    data = []
-    for row in table.find_all('tr')[1:]: # Skip the header row
-        cells = row.find_all('td')
-        ticker = cells[0].text.strip()
-        percentage_drop = cells[4].text.strip()
-        percentage_drop = float(percentage_drop.replace("-", "").replace("%", ""))
-        data.append((ticker, percentage_drop))
+def chance_to_recover(company_name,ticker):
+    
+    why_fell = why_stock_fell(ticker)
         
-    return data
-
-# Fetch stock data from Yahoo Finance
-def get_stock_price(ticker,history=5):
-    #time.sleep(4) #To avoid rate limit error
-    if "." in ticker:
-        ticker=ticker.split(".")[0]
-    ticker=ticker
-    stock = yf.Ticker(ticker)
-    df = stock.history(period="1y")
-    df=df[["Close","Volume"]]
-    df.index=[str(x).split()[0] for x in list(df.index)]
-    df.index.rename("Date",inplace=True)
-    df=df[-history:]
-    # print(df.columns)
+    stock_n_rating = get_stock_numeric_rating(ticker, "StockRatings.csv")
     
-    return df.to_string()
-
-def why_price_dropped(company_name,percentage_drop):
+    stock_txt_rating = get_stock_txt_rating(ticker, "StockRatings.csv")
     
-    from datetime import datetime
-
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    
-    user_prompt = f"Why did {company_name} stock price dropped by {percentage_drop} in {current_month} {current_year}?"
-    
-    pplx_key = PERPLEXITY_API
-    url = "https://api.perplexity.ai/chat/completions"
-    payload = {
-        "model": "sonar-medium-online",
-        "temperature": 0,
-        "messages": [
-            {
-            "role": "system",
-            "content": "Be precise and concise."
-            },
-            {
-            "role": "user",
-            "content": user_prompt
-            }
-        ]
-    }
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "Authorization": "Bearer " + pplx_key
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    
-    json_data = response.text
-    
-    # Parse the JSON data
-    parsed_json = json.loads(json_data)
-
-    # Access and print the "content"
-    answer = parsed_json["choices"][0]["message"]["content"]
-    
-    print(f"Price of {company_name} dropped because: \n{answer}")
-    
-    return answer
-
-def get_3financial_statements(ticker):
-    # To avoid rate limit error
-    time.sleep(4)
-    
-    # Ensure ticker is in the correct format
-    if "." in ticker:
-        ticker = ticker.split(".")[0]
-    
-    # Fetch the company information using the ticker symbol
-    company = yf.Ticker(ticker)
-    
-    # Fetch and process the balance sheet
-    balance_sheet = company.balance_sheet
-    if balance_sheet.shape[1] >=  3:
-        balance_sheet = balance_sheet.iloc[:, :3]  # Keep only the first three years of data
-    balance_sheet = balance_sheet.dropna(how="any")
-    balance_sheet_str = balance_sheet.to_string()
-    
-    # Fetch and process the income statement
-    income_statement = company.financials
-    if income_statement.shape[1] >=  3:
-        income_statement = income_statement.iloc[:, :3]  # Keep only the first three years of data
-    income_statement = income_statement.dropna(how="any")
-    income_statement_str = income_statement.to_string()
-    
-    # Fetch and process the cash flow statement
-    cash_flow_statement = company.cashflow
-    if cash_flow_statement.shape[1] >=  3:
-        cash_flow_statement = cash_flow_statement.iloc[:, :3]  # Keep only the first three years of data
-    cash_flow_statement = cash_flow_statement.dropna(how="any")
-    cash_flow_statement_str = cash_flow_statement.to_string()
-    
-    three_statements = f"""
-        Balance Sheet:\n{balance_sheet_str}\n
-        Income Statement:\n{income_statement_str}\n
-        Cash Flow Statement:\n{cash_flow_statement_str}\n
+    prompt = f"""You are the greatest and most competent financial analyst that can understand and predict company's future.
+        Read this context about the company:\n
+        Reason {company_name} stock fell last 24 hours: {why_fell}.\n
+        {company_name} overall description: {stock_txt_rating}\n
+        {company_name} overall financial rating from world class analytical experts: {stock_n_rating} out of 100.\n
+        Question: What is the chance of a company to recover its stock price based on the reason the stock fell, company description, company financial health?
+        Answer from a financial expert:
         """
-    return three_statements
+    
+    result = llm_call(prompt)
+    
+    return result
 
-# Fetch financial statements from Yahoo Finance
-def get_balance_sheet(ticker):
-    # time.sleep(4) #To avoid rate limit error
-    if "." in ticker:
-        ticker=ticker.split(".")[0]
-    else:
-        ticker=ticker
-    ticker=ticker
-    company = yf.Ticker(ticker)
-    balance_sheet = company.balance_sheet
-    if balance_sheet.shape[1]>=3:
-        balance_sheet=balance_sheet.iloc[:,:3]    # Remove 4th years data
-    balance_sheet=balance_sheet.dropna(how="any")
-    balance_sheet = balance_sheet.to_string()
-    return balance_sheet
+################################################################################################
+# Full Step 6: Calculate end value of a company
+################################################################################################
 
-def get_company_name(ticker):
-
-    user_prompt = f"""
-        What is the company name that has {ticker} stock ticker? Answer only with the company name and nothing else."""
-    
-    pplx_key = PERPLEXITY_API
-    url = "https://api.perplexity.ai/chat/completions"
-    payload = {
-        "model": "sonar-medium-online",
-        "temperature": 0,
-        "messages": [
-            {
-                "role": "user",
-                "content": user_prompt
-            }
-        ]
-    }
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "Authorization": "Bearer " + pplx_key
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    
-    json_data = response.text
-    
-    # Parse the JSON data
-    parsed_json = json.loads(json_data)
-
-    # Access and print the "content"
-    company_name = parsed_json["choices"][0]["message"]["content"]
-    
-    print(company_name)
-    
-    return company_name
-
-def Anazlyze_stock(ticker,percentage_drop):
-    company_name = get_company_name(ticker)
-    stock_price=get_stock_price(ticker,history=20)
-    stock_financials=get_3financial_statements(ticker)
-    bad_news=why_price_dropped(company_name,percentage_drop)
-
-    available_information=f"""
-            {company_name} Stock Price dynamic for the past 30 days: {stock_price}\n\n
-            {company_name} Financials: {stock_financials}\n\n
-            {company_name} stock price fell by {percentage_drop} due to {bad_news}.
-            """
-    
-    print(available_information)
-    
-    system_prompt = f"You are an investment advisory bot that gives detailed ansers about user's question. \
-            Give detailed stock analysis and use the available data and provide investment recommendation. \
-            The user is fully aware about the investment risk, dont include any kind of warning like 'It is recommended to conduct further research and analysis or consult with a financial advisor before making an investment decision' in the answer. Each answer should give an opinion about three things:  company's financial statements, companies stock price dynamic over the period that was analyzed, latest news about the company."
-    
-    user_prompt = f"""You are the best risk analysis expert in the world. 
-            {company_name} stock has dropped by {percentage_drop} and you need to estimate the probability of the company being able to fix its problems.
-            Use and analyze this information about {company_name}:
-            {available_information}\n\n
-            Based on all the informtaion you have, give your precise percentage estimation of how likely will the company successfully fix its problems to return stock price back to all time high.
-            Your answer must be only a number of percents and nothing more.
-            Examples of acceptable answers: 34%, 55%, 74%.
-            Question: What is the probability of the company to fix the reasons that dropped the price and recover its stock price?
-            Answer in percentage:
-            """
-    
-    print("##########################################\n")
-    
-    book_value = get_book_value(ticker)
-    market_value = get_market_cap(ticker) # TODO: add the most recent market cap (not from balance sheet)
-    
-    probability_to_fix = llm_inference(system_prompt, user_prompt)
-    
-    match = re.search(r'(\d+)%', probability_to_fix)
-    if match:
-        prob_int = int(match.group(1)) 
-    
-    prob_int = prob_int / 100
-    
-    print(f"Book Value: {book_value}")
-    print(f"Market Cap: {market_value}")
-    
-    # basically ( book_value - market_value ) * probability to fix
-
-    net_value = book_value - market_value
-    print("Net Value: ", net_value)
-    print("Probability to fix: ",prob_int)
-    
-    formula = net_value * prob_int
-    formula = round(formula,2)
-    
-    print("Net Value * Probability to fix the problems: ",formula)
-    
-    roi = formula/market_value
-    roi_round = round(roi,4)
-    roi_percentage = roi_round * 100
-    roi_percentage_round = round(roi_percentage,1)
-    print(f"ROI (NetValue*ProbFix / MarketValue): {roi_percentage_round}%")
-    
-    if formula > 0:
-        print("**Buy ",company_name)
-        rec = True
-        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
-        #return result
-        return True
-    else:
-        print("**DO NOT BUY ",company_name)
-        rec = False
-        #result = api_return(company_name,book_value,market_value,net_value,prob_int,roi,available_information,rec)
-        #return result
-        return False
+# Book value - market cap * probability to fix the problems
 
 
-def main_foo():
+def main():
+    
     losers_data = get_losers()
 
     sorted_losers_data = sorted(losers_data, key=lambda x: x[1], reverse=True)
@@ -349,22 +278,35 @@ def main_foo():
     # Print the extracted data
     for ticker, percentage_drop in top_3_losers:
         
-        #print(f"{ticker}: {percentage_drop}")
-    
-        #ticker = "MSFT"
-        #percentage_drop = "0.39"
-        print(ticker)
-        print(percentage_drop)
+        company_name = get_company_name(ticker)
         
-        rec = Anazlyze_stock(ticker,percentage_drop)
-        print(f"Recommendation is: {rec}")
-        print("\n##########################################\n\n")
-        #return rec
-    
+        answer = chance_to_recover(company_name,ticker)
+        
+        book_value = get_book_value(ticker)
+        
+        market_cap = get_market_cap(ticker)
+        
+        print(f"{company_name} chacnes to recover: ", answer)
+        print(f"{company_name} Book value is {book_value}")
+        print(f"{company_name} Market Cap is {market_cap}")
+        print(f"{company_name} Net value is {book_value - market_cap}")
+        
+        
 
-if __name__ == "__main__":
-    main_foo()
 
-#TODO
-# 1. Add getting Book Value
-# 2. Add getting Market Value
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
