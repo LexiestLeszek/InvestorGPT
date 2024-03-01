@@ -72,8 +72,6 @@ def get_company_name(ticker):
     parsed_json = json.loads(json_data)
     company_name = parsed_json["choices"][0]["message"]["content"]
     
-    print(company_name)
-    
     return company_name
 
 def llm_call(prompt):
@@ -145,10 +143,10 @@ def why_stock_fell(company_name):
     
     context = goog_query_str(company_name)
     
-    prompt = f"""You are a great financial analyst that takes company news and can interpret how they affect company stocks.
+    prompt = f"""You are the best financial analyst that takes {company_name} news and can interpret how they affect {company_name} stocks.
             Read these news carefully:\n
             {context}\n
-            Question: Why did company's stock fell? Answer with as many financial details as possible, but keep the answer short.
+            Question: Why did {company_name} stock price fell? Answer with as many financial details as possible, give detailed analysis and return the reasons why {company_name} stock price dropped.
             Answer: 
             """
     
@@ -201,6 +199,13 @@ def get_market_cap(ticker):
     #print("Total Capitalization in dollars as of latest balance sheet: ",market_cap)
     return market_cap
 
+def get_net_value(ticker):
+
+    book_value = get_book_value(ticker)
+    market_cap = get_market_cap(ticker)
+    net_value = book_value - market_cap
+    return net_value
+    
 def get_stock_numeric_rating(ticker, csv_file_name):
     # Read the CSV file into a DataFrame
     df = pd.read_csv(csv_file_name)
@@ -213,11 +218,6 @@ def get_stock_numeric_rating(ticker, csv_file_name):
     overall_rating = filtered_df.iloc[0]['Overall Rating']
     
     return overall_rating
-
-# Example usage:
-# ticker = 'AAPL'
-# csv_file_name = 'stock_ratings.csv'
-# print(get_overall_rating(ticker, csv_file_name))
 
 #def get_stock_txt_rating(ten_k,ten_q):
 def get_stock_txt_rating(company_name):    
@@ -252,13 +252,26 @@ def get_stock_txt_rating(company_name):
 # Full Step 5: Estimate a chance for a stock to fix the problem 
 ################################################################################################
 
-# using monte carlo simulation 
+# using monte carlo simulation and bayes rule
 #   based on the stock fundamentals
 #   reasons why stock fell
 #   company's unique advantages
 #   company's health compared to competitotrs
 #   general market trends
 
+# General idea: 
+# 1. Probability of recovering stock price due to health of fundamentals (0-1) 
+# p(H) = probability to recover stock price from bad news (general case)
+# p(E) = probability of a company having an E financial health (health is the value from 0 to 1)
+# P(E|H) = probability of a company to have an E financial health after recovering stock price from bad news
+# General formula :
+###       P(H|E) = ( P(E|H) * P(H) ) / P(E)
+#
+# 2. Probability of recovering stock price due to how bad are the news 
+# 3. average?
+
+# NOT USED NOT USED
+'''
 def chance_to_recover(company_name,ticker):
     
     why_fell = why_stock_fell(ticker)
@@ -282,12 +295,10 @@ def chance_to_recover(company_name,ticker):
     print(f"{company_name} chances to recover stock price: {result}")
     
     return result
-
+'''
 ################################################################################################
 # Full Step 6: Calculate end value of a company
 ################################################################################################
-
-# Book value - market cap * probability to fix the problems
 
 
 def main():
@@ -303,21 +314,29 @@ def main():
     for ticker, percentage_drop in top_3_losers:
         
         company_name = get_company_name(ticker)
-        print(company_name)
+        print(f"{company_name} ({ticker}) -{percentage_drop}%")
         
-        print(ticker)
-        print(percentage_drop)
-        answer = chance_to_recover(company_name,ticker)
+        why_fell = why_stock_fell(company_name)
+        print(f"{company_name} Stock drop reasons: {why_fell}")
+        net_value = get_net_value(ticker)
+        print(f"{company_name} Net Value (Book - MarketCap): {net_value}")
+        stock_n_rating = get_stock_numeric_rating(ticker, "StockRatings.csv")
+        print(f"{company_name} Overall Financial score: {stock_n_rating}")
+        stock_txt_rating = get_stock_txt_rating(company_name)
+        print(f"{company_name} Overall Financial health: {stock_txt_rating}")
         
-        book_value = get_book_value(ticker)
+        prompt = f"""You are the greatest and most competent financial analyst that can understand and predict company's future.
+            Read this context about the company:\n
+            Reason {company_name} stock fell last 24 hours: {why_fell}.\n
+            {company_name} overall description: {stock_txt_rating}\n
+            {company_name} overall financial rating from world class analytical experts: {stock_n_rating} out of 100.\n
+            Question: What is the chance of a company to recover its stock price based on the reason the stock fell, company description, company financial health?
+            Answer from a financial expert:
+            """
         
-        market_cap = get_market_cap(ticker)
-        
-        print("\n")
+        answer = llm_call(prompt)
         print(f"{company_name} chacnes to recover: ", answer)
-        print(f"{company_name} Book value is {book_value}")
-        print(f"{company_name} Market Cap is {market_cap}")
-        print(f"{company_name} Net value is {book_value - market_cap}")
+        
 
         
 if __name__ == "__main__":
