@@ -39,6 +39,16 @@ python investorbot.py
 
 The script will automatically gather data, analyze it, and provide predictions for the top 3 stocks that have experienced significant drops.
 
+## Grading System
+
+The grading system used in this program is based on the normal distribution of values for a certain metric for a specified sector. For example, if I want to grade the Net Margin of a stock in the Technology sector, I look at the net margins of all the stocks in the technology sector and grade the stock's net margin based on its percentile in the distribution of values.
+
+The grading system utilized in the program takes the standard deviation of the set of values after removing outliers and divides that number by 3, which is represented by the 'Change' value shown in the figure, equaling 4.68. This is the value that is used to grade each metric for each stock.
+
+After all the metrics in each category of valuation, profitability, growth, and price performance are graded, the grades are then converted to numbers and then the average of the values is computed. To get the overall rating of a stock, these numerical ratings for each category are added together and multiplied to get a score out of 100.
+
+For metrics where a lower value is considered better, such as P/E ratios, the algorithm will use the 10th percentile as the basis for grading. So if a stock in the Technology sector has a P/E ratio of 10 and that is in the 10th percentile of all P/E ratios for Technology stocks, it will be rated A+.
+
 ## Contributing
 
 Contributions to InvestorBot are welcome. Please feel free to submit issues or pull requests on GitHub.
