@@ -4,8 +4,6 @@ InvestorBot is an advanced tool designed to automate the process of analyzing an
 
 ## Features
 
-## Features
-
 stock_data_loader.py:
 - **Automated Data Collection**: Collects stock metrics from finance websites using web scraping techniques.
 - **Data Cleaning and Analysis**: Processes and cleans the collected data, removing outliers and calculating sector-wise metrics.
