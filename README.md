@@ -1,99 +1,54 @@
-# InvestorBot
+# InvestorBot: Automated Stock Analysis and Prediction
 
-InvestorBot is a FastAPI-based application designed to provide investment analysis and recommendations for stocks experiencing significant drops in value. The application leverages data from Yahoo Finance, financial statements, and uses AI-driven inference to assess the likelihood of a company's recovery and provide investment recommendations.
-
-The script analyzes stocks that have experienced significant drops in value within a specified period (e.g., during the week). It fetches financial statements for each of these stocks, utilizes a language model to analyze the data, calculates financial metrics, and collects news about the companies to understand why their shares fell. Based on this comprehensive analysis, which includes assessing the financial indicators and the impact of news on the stock prices, the script calculates the probability of the company to fix its problems (that became the reason for the stock price to drop) and then calculates and provides recommendation whether it's worth investing in these companies or not. 
-This process involves evaluating the company's financial health, recent news, and potential for recovery, ultimately providing allround investment recommendation.
+InvestorBot is an advanced tool designed to automate the process of analyzing and predicting stock market movements. It leverages a range of Python libraries and APIs to gather and analyze data from various sources, providing insights into stock performance, potential reasons for price fluctuations, and predictive analytics to assess the likelihood of stock recovery.
 
 ## Features
 
-- **API Integration**: Utilizes Perplexity AI for natural language processing to generate human-like responses and investment recommendations.
-- **Stock Analysis**: Analyzes stocks that have seen significant drops in value.
-- **Financial Statement Analysis**: Fetches and analyzes the balance sheet, income statement, and cash flow statement for the analyzed stocks.
-- **AI-Driven Inference**: Uses AI to predict the probability of a company fixing its issues and recovering its stock price.
-- **Investment Recommendation**: Based on the analysis, provides a recommendation on whether to buy or not.
+## Features
 
-## Getting Started
+stock_data_loader.py:
+- **Automated Data Collection**: Collects stock metrics from finance websites using web scraping techniques.
+- **Data Cleaning and Analysis**: Processes and cleans the collected data, removing outliers and calculating sector-wise metrics.
+- **Sector-wise Performance Metrics**: Calculates median, 10th percentile, 90th percentile, and standard deviation for various financial metrics across different sectors AND industries.
+- **Grading System**: Assigns letter grades to stocks based on their fundamentals performance metrics, providing a quick overview of stock health in the form of a rating from 1 to 100.
+- **Export Functionality**: Exports the analyzed data, including stock ratings and grades, to a CSV file for further analysis or reporting.
 
-### Prerequisites
+investorbot.py:
+- **Top 3 Losers Stock of the Day**: InvestorBot gathers data on stocks that fell today and returns their tickers and percentage drops.
+- **Stock Performance Analysis**: InvestorBot gathers data on stocks that have experienced significant drops, identifying the top losers based on percentage drop.
+- **Reason for Stock Fall**: By scraping the latest news and financial reports, it provides a detailed analysis of why a particular stock fell, offering insights into the underlying causes.
+- **Financial Health Assessment**: Utilizes advanced semantic search and language models to assess the overall financial health of a company, based on its financial reports and market trends.
+- **Stock Recovery Prediction**: Employs Monte Carlo simulations and financial analysis to estimate the chances of a stock recovering from its recent performance.
+- **End Value Calculation**: Combines book value, market cap, and recovery predictions to estimate the end value of a company.
 
-- Python 3.7+
-- FastAPI
-- Uvicorn
-- BeautifulSoup
-- Requests
-- yfinance
-- bs4
+## Installation
 
-### Installation
-
-1. Clone the repository:
+To set up InvestorBot, you will need Python installed on your system. Then, clone the repository and install the required Python packages using pip:
 
 ```bash
-git clone https://github.com/LexiestLeszek/investorbot.git
+git clone https://github.com/yourusername/investorbot.git
 cd investorbot
-```
-
-2. Install the required packages:
-
-```bash
 pip install -r requirements.txt
 ```
 
-### Running the Application
+## Usage
 
-To run the application, use the following command:
+To run InvestorBot, simply execute the `investorbot.py` script:
 
 ```bash
-uvicorn app:app --reload
+python investorbot.py
 ```
 
-This will start the server at `http://0.0.0.0:8001`.
+The script will automatically gather data, analyze it, and provide predictions for the top 3 stocks that have experienced significant drops.
 
-## API Endpoints
+## Contributing
 
-### `GET /api/getinvestinfo`
-
-Returns investment information for stocks that have seen significant drops in value.
-
-### Example Usage
-
-```http
-GET /api/getinvestinfo
-```
-
-### Response
-
-A JSON response containing the investment analysis and recommendation for the analyzed stocks.
-
-
-## Key Functions
-
-- `get_losers()`: Fetches a list of stocks that have shown significant drops in value.
-- `get_stock_price(ticker, history=5)`: Retrieves the historical stock prices for a given ticker symbol.
-- `get_3financial_statements(ticker)`: Fetches the balance sheet, income statement, and cash flow statement for a company.
-- `why_price_dropped(company_name, percentage_drop)`: Uses Perplexity AI to determine the reasons behind a stock price drop.
-- `Anazlyze_stock(ticker, percentage_drop)`: Analyzes a stock, generates investment recommendations, and returns a JSON object with the analysis results.
-
-## Future Enhancements
-
-- **Book Value and Market Value Fetching**: Implement logic to fetch the book value and market value of companies for a more comprehensive analysis.
-- **Expanded Financial Statement Analysis**: Enhance the analysis of financial statements to include more detailed insights.
-- **Integration with Other Financial APIs**: Consider integrating with other financial data providers for a broader range of analysis.
-- **User Interface**: Develop a user-friendly interface for easier access to the tool's functionalities.
+Contributions to InvestorBot are welcome. Please feel free to submit issues or pull requests on GitHub.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+InvestorBot is open-source software licensed under the MIT License. See the `LICENSE` file for more details.
 
-## Contact
+---
 
-For any questions or suggestions, please open an issue on GitHub or contact the project maintainers.
-
-## Acknowledgments
-
-- [Yahoo Finance](https://finance.yahoo.com/) for providing financial data.
-- [Perplexity AI](https://perplexity.ai/) for the AI-driven inference service.
-- [yfinance](https://pypi.org/project/yfinance/) for fetching financial data from Yahoo Finance.
-- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/) for web scraping to fetch financial data.
-- [FastAPI](https://fastapi.tiangolo.com/) for building the web API.
+InvestorBot is a powerful tool for investors and financial analysts, providing a comprehensive analysis and predictive modeling for stock market performance. With its ability to gather and analyze data from various sources, it offers valuable insights into stock movements and recovery potential.
