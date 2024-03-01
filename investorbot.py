@@ -8,8 +8,10 @@ import re
 import requests
 import yfinance as yf
 from datetime import date, timedelta
-#from stockgrader import *
+#from stock_data_loader import *
 import pandas as pd
+import warnings
+warnings.filterwarnings("ignore")
 
 
 ################################################################################################
@@ -19,7 +21,7 @@ def goog_query_str(company_name):
     today = date.today()
     yesterday = today - timedelta(days=1)
     yesterday = yesterday.strftime('%Y-%m-%d')
-    query = f"{company_name} stock fell after:{yesterday}"
+    query = f"{company_name} stock dropped after:{yesterday}"
     print(query)
     try:
         search_results = search(query,num_results=5,advanced=True)
@@ -143,10 +145,9 @@ def why_stock_fell(company_name):
     
     context = goog_query_str(company_name)
     
-    prompt = f"""You are the best financial analyst that takes {company_name} news and can interpret how they affect {company_name} stocks.
-            Read these news carefully:\n
-            {context}\n
-            Question: Why did {company_name} stock price fell? Answer with as many financial details as possible, give detailed analysis and return the reasons why {company_name} stock price dropped.
+    prompt = f"""
+            Context: {context}\n
+            Question: Based on the Context, answer with bullet points and give detailed analysis the precise reasons why {company_name} stock price dropped. Why did {company_name} stock price fell? 
             Answer: 
             """
     
@@ -312,6 +313,7 @@ def main():
     
     # Print the extracted data
     for ticker, percentage_drop in top_3_losers:
+        print("###########################################################################\n")
         
         company_name = get_company_name(ticker)
         print(f"{company_name} ({ticker}) -{percentage_drop}%")
@@ -323,7 +325,7 @@ def main():
         stock_n_rating = get_stock_numeric_rating(ticker, "StockRatings.csv")
         print(f"{company_name} Overall Financial score: {stock_n_rating}")
         stock_txt_rating = get_stock_txt_rating(company_name)
-        print(f"{company_name} Overall Financial health: {stock_txt_rating}")
+        #print(f"{company_name} Overall Financial health: {stock_txt_rating}")
         
         prompt = f"""You are the greatest and most competent financial analyst that can understand and predict company's future.
             Read this context about the company:\n
@@ -335,10 +337,7 @@ def main():
             """
         
         answer = llm_call(prompt)
-        print(f"{company_name} chacnes to recover: ", answer)
-        
-
+        print(f"{company_name} chacnes to recover: {answer}\n")
         
 if __name__ == "__main__":
     main()
-
