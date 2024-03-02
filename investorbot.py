@@ -54,7 +54,7 @@ def get_company_name(ticker):
     user_prompt = f"""What is the company name that has {ticker} stock ticker? Answer only with the company name and nothing else."""
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
-        "model": "sonar-medium-online",
+        "model": "sonar-small-online",
         "temperature": 0,
         "messages": [
             {
@@ -228,7 +228,7 @@ def get_stock_txt_rating(company_name):
     
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
-        "model": "sonar-medium-online",
+        "model": "sonar-small-online",
         "temperature": 0,
         "messages": [
             {
@@ -341,3 +341,4 @@ def main():
         
 if __name__ == "__main__":
     main()
+
