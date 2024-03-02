@@ -323,7 +323,7 @@ def main():
         net_value = get_net_value(ticker)
         print(f"{company_name} Net Value (Book - MarketCap): {net_value}")
         stock_n_rating = get_stock_numeric_rating(ticker, "StockRatings.csv")
-        print(f"{company_name} Overall Financial score: {stock_n_rating}")
+        print(f"{company_name} Overall Funamental Financials health score: {stock_n_rating}")
         stock_txt_rating = get_stock_txt_rating(company_name)
         #print(f"{company_name} Overall Financial health: {stock_txt_rating}")
         
@@ -337,7 +337,7 @@ def main():
             """
         
         answer = llm_call(prompt)
-        print(f"{company_name} chacnes to recover: {answer}\n")
+        print(f"{company_name} chances to recover: {answer}\n")
         
 if __name__ == "__main__":
     main()
