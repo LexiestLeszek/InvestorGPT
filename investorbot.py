@@ -13,6 +13,7 @@ import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 
+
 ################################################################################################
 # Helper funcs
 ################################################################################################
@@ -50,7 +51,13 @@ def goog_query_str(company_name):
 
 def get_company_name(ticker):
 
-    user_prompt = f"""What is the company name that has {ticker} stock ticker? Answer only with the company name and nothing else."""
+    user_prompt = f"""
+            Answer only with the company name and nothing else.
+            Do not answer anything except company name, no commas, periods, punctuation or explanation.
+            Answer only with the company name.
+            Question: What is the company name that has {ticker} stock ticker? 
+            Company name:
+            """
     url = "https://api.perplexity.ai/chat/completions"
     payload = {
         "model": "sonar-small-online",
