@@ -8,7 +8,7 @@ import re
 import requests
 import yfinance as yf
 from datetime import date, timedelta
-#from stock_data_loader import *
+from stock_data_loader import *
 import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
