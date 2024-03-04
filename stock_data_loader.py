@@ -302,28 +302,72 @@ def export_to_csv(filename):
     stock_csv_data = allStockData[ordered_columns.replace(', ', ',').split(',')]
     stock_csv_data.to_csv(filename, index=False)
     
-    print('\nSaved as', f"StockRatings-{today_date}.csv")
+    print('\nSaved as', filename)
     
 
-      
+def load_and_save(): 
        
-get_company_data(URL, debug=False)
+    get_company_data(URL, debug=False)
 
-get_sector_data()
+    get_sector_data()
 
-get_stock_rating_data()
+    get_stock_rating_data()
 
-export_to_csv(f"StockRatings-{today_date}.csv")
+    export_to_csv(f"StockRatings-{today_date}.csv")
 
+
+#if __name__ == "__main__":
+#    load_and_save()
+    
 
 '''
+# stockdataloader.py
+
 This script is designed to scrape financial data from Finviz.com, analyze it, and grade each stock out of 100 based on various metrics such as valuation, profitability, growth, and performance. Here's a breakdown of each function and its purpose:
 
 ### Main Components
 
-- **Imports**: The script imports necessary libraries for web scraping, data manipulation, and progress tracking.
-- **Global Variables**: It initializes global variables to store scraped data, proxies, and user agents.
-- **grading_metrics**: A dictionary that defines the metrics used for grading each stock.
+The provided code snippet is a Python script designed to scrape financial data from Finviz, process it, and calculate stock ratings based on various metrics. Let's break down the functions you're interested in: `get_company_data(URL, debug=False)`, `get_sector_data()`, and `get_stock_rating_data()`.
+
+## `get_company_data(URL, debug=False)`
+
+This function is responsible for scraping company data from Finviz. It takes two parameters:
+
+- `URL`: The URL of the Finviz screener page from which to scrape data.
+- `debug`: A boolean flag to control the debugging mode. If set to `True`, it limits the number of stocks scraped to 200 for testing purposes.
+
+1. **Initialization**: It initializes a counter for page numbers and calls `getNumStocks(f"{URL}&r=10000")` to determine the total number of stocks listed on the screener page. If `debug` is `False`, it sets the total number of stocks to scrape; otherwise, it limits the scrape to 200 stocks for testing.
+
+2. **Scraping Loop**: Using a progress bar (`tqdm`), it iterates through the pages, incrementing the page counter by 20 each time (since Finviz displays 20 stocks per page). For each iteration:
+   - It selects a random user agent from a list of user agents to avoid being blocked by Finviz.
+   - It sends a GET request to the Finviz screener page with the current page number and user agent.
+   - It parses the HTML content of the page using BeautifulSoup to extract the data.
+   - It attempts to read the tables into a pandas DataFrame, skipping the first row if it's not the first page.
+   - It appends the extracted table to a list of dataframes.
+   - It introduces a random sleep between 0.5 and 1 second to mimic human browsing behavior and avoid overloading the server.
+
+3. **Data Concatenation**: After scraping all pages, it concatenates all the dataframes into a single pandas DataFrame, `allStockData`, which contains all the scraped stock data.
+
+## `get_sector_data()`
+
+This function processes the scraped data to calculate sector-specific metrics. It iterates over each unique sector in the `allStockData` DataFrame and calculates the median, 10th percentile, 90th percentile, and standard deviation for each metric for that sector. These metrics are stored in a nested dictionary, `sector_data`, which is structured as follows:
+
+- Outermost key: Sector name.
+- Second-level key: Metric name.
+- Third-level keys: 'Median', '10Pct', '90Pct', 'Std' (standard deviation).
+
+## `get_stock_rating_data()`
+
+This function calculates the overall rating for each stock based on its performance in various categories (Valuation, Profitability, Growth, Performance). It iterates over each row in `allStockData`, calculates the category grades for each stock, and then calculates the overall stock rating. The grades for each category are determined by comparing the stock's metric values against the sector's median, 10th percentile, and 90th percentile values, as well as the standard deviation.
+
+1. **Iteration**: For each stock, it retrieves its ticker and sector.
+2. **Category Grades Calculation**: It calculates the grades for each category (Valuation, Profitability, Growth, Performance) by calling `get_category_grades(ticker, sector)`.
+3. **Overall Stock Rating Calculation**: It calculates the overall stock rating by summing the category grades and normalizing the result.
+4. **Data Addition**: It adds the overall rating and category grades to the `data_to_add` dictionary, which is later appended to the `allStockData` DataFrame.
+
+This function also includes a debug mode, which limits the number of stocks processed to 10, useful for testing.
+
+In summary, the script scrapes financial data from Finviz, processes it to calculate sector-specific metrics, and then calculates an overall stock rating based on these metrics. Each function plays a critical role in the process, from data acquisition to analysis and rating.
 
 ### Functions
 
