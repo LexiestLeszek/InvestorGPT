@@ -1,5 +1,7 @@
 # InvestorBot: Automated Stock Analysis and Prediction
 
+InvestorBot is an AI agent that analyzes the stock that dropped in its price recently and calculates chance for the company to recover the stock price back.
+
 InvestorBot is an advanced tool designed to automate the process of analyzing and predicting stock market movements. It leverages a range of Python libraries and APIs to gather and analyze data from various sources, providing insights into stock performance, potential reasons for price fluctuations, and predictive analytics to assess the likelihood of stock recovery.
 
 ## Features
