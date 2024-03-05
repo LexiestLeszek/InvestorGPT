@@ -26,7 +26,7 @@ investorbot.py:
 To set up InvestorBot, you will need Python installed on your system. Then, clone the repository and install the required Python packages using pip:
 
 ```bash
-git clone https://github.com/yourusername/investorbot.git
+git clone https://github.com/LexiestLeszek/investorbot.git
 cd investorbot
 pip install -r requirements.txt
 ```
