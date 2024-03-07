@@ -33,7 +33,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-To run InvestorGPT, simply execute the `InvestorGPT.py` script:
+1. To run InvestorGPT, first run stock_data_loader.py to get the fundamental analysis of top ~10,000 stocks:
+
+```bash
+python stock_data_loader.py
+```
+
+2. Then, run InvestorGPT.py to analyze today's loser stocks:
 
 ```bash
 python InvestorGPT.py
