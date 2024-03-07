@@ -61,4 +61,6 @@ InvestorGPT is open-source software licensed under the MIT License. See the `LIC
 
 ---
 
-InvestorGPT is a powerful tool for investors and financial analysts, providing a comprehensive analysis and predictive modeling for stock market performance. With its ability to gather and analyze data from various sources, it offers valuable insights into stock movements and recovery potential.
+## Not a Financial Advice
+
+InvestorGPT is a powerful tool for investors and financial analysts, providing a comprehensive analysis and predictive modeling for stock market performance. With its ability to gather and analyze data from various sources, it offers valuable insights into stock movements and recovery potential. The tool is made for educational purposes and might provide wrong results. You should use its analysis and recommendations to your own discretion.
